@@ -23,8 +23,8 @@ void main() async {
 Future<void> _initSupabase() async {
   try {
     await Supabase.initialize(
-      url: 'https://placeholder-url.supabase.co',
-      anonKey: 'placeholder-anon-key',
+      url: 'https://rcjltzegihmtgogahehy.supabase.co',
+      anonKey: 'sb_publishable_xN7YTA7-7ZfGjVtpQe6uxw_QrrvjhO6',
     );
   } catch (e) {
     debugPrint('Supabase initialization failed: $e');
