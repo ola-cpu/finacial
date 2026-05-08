@@ -21,6 +21,10 @@ class DashboardPage extends ConsumerWidget {
             onPressed: () => context.push('/statistics'),
           ),
           IconButton(
+            icon: const Icon(Icons.analytics),
+            onPressed: () => context.push('/analytics'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await ref.read(authControllerProvider.notifier).signOut();
