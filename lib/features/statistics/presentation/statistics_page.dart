@@ -1,13 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../incomes/data/income_service.dart';
+import '../../expenses/data/expense_service.dart';
+import '../../../core/services/pdf_export_service.dart';
 
-class StatisticsPage extends StatelessWidget {
+class StatisticsPage extends ConsumerWidget {
   const StatisticsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Statistiques')),
+      appBar: AppBar(
+        title: const Text('Statistiques'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final incomes = await ref.read(incomeServiceProvider).getIncomes();
+              final expenses = await ref.read(expenseServiceProvider).getExpenses();
+              await PdfExportService().generateReport(incomes: incomes, expenses: expenses);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Rapport PDF généré (simulation)')),
+              );
+            },
+          )
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

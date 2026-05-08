@@ -1,19 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../incomes/data/income_service.dart';
+import '../../expenses/data/expense_service.dart';
 
-class DashboardPage extends ConsumerWidget {
+class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends ConsumerState<DashboardPage> {
+  @override
+  Widget build(BuildContext context) {
+    final incomesFuture = ref.watch(incomeServiceProvider).getIncomes();
+    final expensesFuture = ref.watch(expenseServiceProvider).getExpenses();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.account_balance_wallet),
+            onPressed: () => context.push('/budgets').then((_) => setState(() {})),
+          ),
+          IconButton(
             icon: const Icon(Icons.flag),
-            onPressed: () => context.push('/goals'),
+            onPressed: () => context.push('/goals').then((_) => setState(() {})),
           ),
           IconButton(
             icon: const Icon(Icons.bar_chart),
@@ -29,15 +43,31 @@ class DashboardPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: const ListTile(
-                contentPadding: EdgeInsets.all(20),
-                title: Text('Solde Total', style: TextStyle(fontSize: 18)),
-                subtitle: Text('250 000 FCFA', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF50C878))),
-                trailing: Icon(Icons.account_balance, color: Color(0xFF50C878), size: 40),
-              ),
+            FutureBuilder<List<dynamic>>(
+              future: Future.wait([incomesFuture, expensesFuture]),
+              builder: (context, snapshot) {
+                double total = 0;
+                if (snapshot.hasData) {
+                  final incomes = snapshot.data![0] as List<Map<String, dynamic>>;
+                  final expenses = snapshot.data![1] as List<Map<String, dynamic>>;
+                  for (var i in incomes) {
+                    total += (i['amount'] as num).toDouble();
+                  }
+                  for (var e in expenses) {
+                    total -= (e['amount'] as num).toDouble();
+                  }
+                }
+                return Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(20),
+                    title: const Text('Solde Total', style: TextStyle(fontSize: 18)),
+                    subtitle: Text('${total.toStringAsFixed(0)} FCFA', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF50C878))),
+                    trailing: const Icon(Icons.account_balance, color: Color(0xFF50C878), size: 40),
+                  ),
+                );
+              }
             ),
             const SizedBox(height: 24),
             const Row(
@@ -49,27 +79,41 @@ class DashboardPage extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: ListView(
-                children: const [
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: Colors.redAccent, child: Icon(Icons.restaurant, color: Colors.white)),
-                    title: Text('Alimentation'),
-                    subtitle: Text('Aujourd\'hui'),
-                    trailing: Text('-15 000 FCFA', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                  ),
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.directions_bus, color: Colors.white)),
-                    title: Text('Transport'),
-                    subtitle: Text('Hier'),
-                    trailing: Text('-5 000 FCFA', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                  ),
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: Colors.greenAccent, child: Icon(Icons.payments, color: Colors.white)),
-                    title: Text('Salaire'),
-                    subtitle: Text('01 Octobre'),
-                    trailing: Text('+350 000 FCFA', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-                  ),
-                ],
+              child: FutureBuilder<List<dynamic>>(
+                future: Future.wait([incomesFuture, expensesFuture]),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                  final incomes = snapshot.data![0] as List<Map<String, dynamic>>;
+                  final expenses = snapshot.data![1] as List<Map<String, dynamic>>;
+
+                  final transactions = [
+                    ...incomes.map((e) => {...e, 'type': 'income'}),
+                    ...expenses.map((e) => {...e, 'type': 'expense'}),
+                  ];
+                  transactions.sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
+
+                  if (transactions.isEmpty) return const Center(child: Text("Aucune transaction"));
+
+                  return ListView.builder(
+                    itemCount: transactions.length,
+                    itemBuilder: (context, index) {
+                      final tx = transactions[index];
+                      final isIncome = tx['type'] == 'income';
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: isIncome ? Colors.greenAccent : Colors.redAccent,
+                          child: Icon(isIncome ? Icons.payments : Icons.restaurant, color: Colors.white)
+                        ),
+                        title: Text(tx['title']),
+                        subtitle: Text(tx['category']),
+                        trailing: Text(
+                          '${isIncome ? '+' : '-'}${tx['amount']} FCFA',
+                          style: TextStyle(color: isIncome ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold)
+                        ),
+                      );
+                    },
+                  );
+                }
               ),
             )
           ],
@@ -80,14 +124,14 @@ class DashboardPage extends ConsumerWidget {
         children: [
           FloatingActionButton(
             heroTag: 'income',
-            onPressed: () => context.push('/add-income'),
+            onPressed: () => context.push('/add-income').then((_) => setState(() {})),
             backgroundColor: const Color(0xFF50C878),
             child: const Icon(Icons.add),
           ),
           const SizedBox(height: 10),
           FloatingActionButton(
             heroTag: 'expense',
-            onPressed: () => context.push('/add-expense'),
+            onPressed: () => context.push('/add-expense').then((_) => setState(() {})),
             backgroundColor: Colors.redAccent,
             child: const Icon(Icons.remove),
           ),

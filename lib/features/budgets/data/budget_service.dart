@@ -1,5 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../../../core/providers/supabase_provider.dart';
 
 class BudgetService {
@@ -12,23 +13,31 @@ class BudgetService {
     required double monthlyLimit,
   }) async {
     final user = supabase.auth.currentUser;
-    if (user == null) throw Exception("User not authenticated");
 
-    await supabase.from('budgets').insert({
-      'user_id': user.id,
+    // Offline first
+    final box = Hive.box('budgets');
+    await box.add({
       'category': category,
       'monthly_limit': monthlyLimit,
+      'created_at': DateTime.now().toIso8601String(),
     });
+
+    if (user != null) {
+      try {
+        await supabase.from('budgets').insert({
+          'user_id': user.id,
+          'category': category,
+          'monthly_limit': monthlyLimit,
+        });
+      } catch (e) {
+        print('Supabase budget sync failed: $e');
+      }
+    }
   }
 
   Future<List<Map<String, dynamic>>> getBudgets() async {
-    final user = supabase.auth.currentUser;
-    if (user == null) return [];
-
-    return await supabase
-        .from('budgets')
-        .select()
-        .eq('user_id', user.id);
+    final box = Hive.box('budgets');
+    return box.values.map((e) => Map<String, dynamic>.from(e)).toList();
   }
 }
 
