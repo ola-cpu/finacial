@@ -22,11 +22,11 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/add-income',
-      builder: (context, state) => const AddIncomePage(),
+      builder: (context, state) => AddIncomePage(income: state.extra as Map<String, dynamic>?),
     ),
     GoRoute(
       path: '/add-expense',
-      builder: (context, state) => const AddExpensePage(),
+      builder: (context, state) => AddExpensePage(expense: state.extra as Map<String, dynamic>?),
     ),
     GoRoute(
       path: '/statistics',

@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../data/income_service.dart';
 
 class AddIncomePage extends ConsumerStatefulWidget {
-  const AddIncomePage({super.key});
+  final Map<String, dynamic>? income;
+  const AddIncomePage({super.key, this.income});
 
   @override
   ConsumerState<AddIncomePage> createState() => _AddIncomePageState();
@@ -12,9 +13,17 @@ class AddIncomePage extends ConsumerStatefulWidget {
 
 class _AddIncomePageState extends ConsumerState<AddIncomePage> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _amountController = TextEditingController();
-  String _category = 'Salaire';
+  late TextEditingController _titleController;
+  late TextEditingController _amountController;
+  late String _category;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.income?['title'] ?? '');
+    _amountController = TextEditingController(text: widget.income?['amount']?.toString() ?? '');
+    _category = widget.income?['category'] ?? 'Salaire';
+  }
 
   @override
   void dispose() {
@@ -25,8 +34,21 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.income != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajouter un Revenu')),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Modifier le Revenu' : 'Ajouter un Revenu'),
+        actions: [
+          if (isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () async {
+                await ref.read(incomeServiceProvider).deleteIncome(widget.income!['index']);
+                if (mounted) context.pop();
+              },
+            ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -56,15 +78,24 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    await ref.read(incomeServiceProvider).addIncome(
-                          title: _titleController.text,
-                          amount: double.parse(_amountController.text),
-                          category: _category,
-                        );
+                    if (isEditing) {
+                      await ref.read(incomeServiceProvider).updateIncome(
+                            index: widget.income!['index'],
+                            title: _titleController.text,
+                            amount: double.parse(_amountController.text),
+                            category: _category,
+                          );
+                    } else {
+                      await ref.read(incomeServiceProvider).addIncome(
+                            title: _titleController.text,
+                            amount: double.parse(_amountController.text),
+                            category: _category,
+                          );
+                    }
                     if (mounted) context.pop();
                   }
                 },
-                child: const Text('Enregistrer'),
+                child: Text(isEditing ? 'Mettre à jour' : 'Enregistrer'),
               )
             ],
           ),

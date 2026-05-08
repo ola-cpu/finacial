@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../data/expense_service.dart';
 
 class AddExpensePage extends ConsumerStatefulWidget {
-  const AddExpensePage({super.key});
+  final Map<String, dynamic>? expense;
+  const AddExpensePage({super.key, this.expense});
 
   @override
   ConsumerState<AddExpensePage> createState() => _AddExpensePageState();
@@ -12,9 +13,17 @@ class AddExpensePage extends ConsumerStatefulWidget {
 
 class _AddExpensePageState extends ConsumerState<AddExpensePage> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _amountController = TextEditingController();
-  String _category = 'Alimentation';
+  late TextEditingController _titleController;
+  late TextEditingController _amountController;
+  late String _category;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.expense?['title'] ?? '');
+    _amountController = TextEditingController(text: widget.expense?['amount']?.toString() ?? '');
+    _category = widget.expense?['category'] ?? 'Alimentation';
+  }
 
   @override
   void dispose() {
@@ -25,8 +34,21 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.expense != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajouter une Dépense')),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Modifier la Dépense' : 'Ajouter une Dépense'),
+        actions: [
+          if (isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () async {
+                await ref.read(expenseServiceProvider).deleteExpense(widget.expense!['index']);
+                if (mounted) context.pop();
+              },
+            ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -56,15 +78,24 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    await ref.read(expenseServiceProvider).addExpense(
-                          title: _titleController.text,
-                          amount: double.parse(_amountController.text),
-                          category: _category,
-                        );
+                    if (isEditing) {
+                      await ref.read(expenseServiceProvider).updateExpense(
+                            index: widget.expense!['index'],
+                            title: _titleController.text,
+                            amount: double.parse(_amountController.text),
+                            category: _category,
+                          );
+                    } else {
+                      await ref.read(expenseServiceProvider).addExpense(
+                            title: _titleController.text,
+                            amount: double.parse(_amountController.text),
+                            category: _category,
+                          );
+                    }
                     if (mounted) context.pop();
                   }
                 },
-                child: const Text('Enregistrer'),
+                child: Text(isEditing ? 'Mettre à jour' : 'Enregistrer'),
               )
             ],
           ),

@@ -10,6 +10,7 @@ class AnalyticsPage extends ConsumerWidget {
     final spendingHabits = ref.watch(spendingHabitsProvider);
     final proposals = ref.watch(savingsProposalsProvider);
     final excessive = ref.watch(excessiveSpendingProvider);
+    final suggestedBudgets = ref.watch(suggestedBudgetsProvider);
     final prediction = ref.watch(futureBalanceProvider);
 
     return Scaffold(
@@ -66,6 +67,22 @@ class AnalyticsPage extends ConsumerWidget {
                 children: data.map((e) => ListTile(
                   leading: const Icon(Icons.lightbulb, color: Colors.yellow),
                   title: Text(e),
+                )).toList(),
+              ),
+              loading: () => const CircularProgressIndicator(),
+              error: (e, s) => Text('Erreur: $e'),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildSection(
+            title: 'Budgets Suggérés',
+            content: suggestedBudgets.when(
+              data: (data) => Column(
+                children: data.map((e) => ListTile(
+                  leading: const Icon(Icons.assignment, color: Color(0xFF50C878)),
+                  title: Text(e['category']),
+                  subtitle: const Text('Budget recommandé'),
+                  trailing: Text('${(e['suggestedAmount'] as double).toStringAsFixed(0)} FCFA'),
                 )).toList(),
               ),
               loading: () => const CircularProgressIndicator(),

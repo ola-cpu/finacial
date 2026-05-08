@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../providers/dashboard_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final incomesAsync = ref.watch(dashboardIncomesProvider);
+    final expensesAsync = ref.watch(dashboardExpensesProvider);
+    final totalIncome = ref.watch(totalIncomeProvider);
+    final totalExpense = ref.watch(totalExpenseProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -42,11 +48,12 @@ class DashboardPage extends ConsumerWidget {
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: const ListTile(
-                contentPadding: EdgeInsets.all(20),
-                title: Text('Solde Total', style: TextStyle(fontSize: 18)),
-                subtitle: Text('250 000 FCFA', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF50C878))),
-                trailing: Icon(Icons.account_balance, color: Color(0xFF50C878), size: 40),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(20),
+                title: const Text('Solde Total', style: TextStyle(fontSize: 18)),
+                subtitle: Text('${(totalIncome - totalExpense).toStringAsFixed(0)} FCFA',
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF50C878))),
+                trailing: const Icon(Icons.account_balance, color: Color(0xFF50C878), size: 40),
               ),
             ),
             const SizedBox(height: 24),
@@ -59,27 +66,37 @@ class DashboardPage extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: ListView(
-                children: const [
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: Colors.redAccent, child: Icon(Icons.restaurant, color: Colors.white)),
-                    title: Text('Alimentation'),
-                    subtitle: Text('Aujourd\'hui'),
-                    trailing: Text('-15 000 FCFA', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                  ),
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.directions_bus, color: Colors.white)),
-                    title: Text('Transport'),
-                    subtitle: Text('Hier'),
-                    trailing: Text('-5 000 FCFA', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                  ),
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: Colors.greenAccent, child: Icon(Icons.payments, color: Colors.white)),
-                    title: Text('Salaire'),
-                    subtitle: Text('01 Octobre'),
-                    trailing: Text('+350 000 FCFA', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-                  ),
-                ],
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(dashboardIncomesProvider);
+                  ref.invalidate(dashboardExpensesProvider);
+                },
+                child: ListView(
+                  children: [
+                    ...incomesAsync.when(
+                      data: (data) => data.map((income) => ListTile(
+                            leading: const CircleAvatar(backgroundColor: Colors.greenAccent, child: Icon(Icons.payments, color: Colors.white)),
+                            title: Text(income['title']),
+                            subtitle: Text(income['category']),
+                            trailing: Text('+${income['amount']} FCFA', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+                            onTap: () => context.push('/add-income', extra: income),
+                          )),
+                      loading: () => [const Center(child: CircularProgressIndicator())],
+                      error: (e, s) => [Text('Erreur: $e')],
+                    ),
+                    ...expensesAsync.when(
+                      data: (data) => data.map((expense) => ListTile(
+                            leading: const CircleAvatar(backgroundColor: Colors.redAccent, child: Icon(Icons.shopping_cart, color: Colors.white)),
+                            title: Text(expense['title']),
+                            subtitle: Text(expense['category']),
+                            trailing: Text('-${expense['amount']} FCFA', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                            onTap: () => context.push('/add-expense', extra: expense),
+                          )),
+                      loading: () => [],
+                      error: (e, s) => [],
+                    ),
+                  ],
+                ),
               ),
             )
           ],

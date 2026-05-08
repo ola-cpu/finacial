@@ -77,7 +77,15 @@ class AnalyticsService {
     double totalIncome = incomes.fold(0, (sum, item) => sum + (item['amount'] as num).toDouble());
     double totalExpense = expenses.fold(0, (sum, item) => sum + (item['amount'] as num).toDouble());
 
-    // Simple linear prediction for next month based on total history
-    return (totalIncome - totalExpense);
+    double currentBalance = totalIncome - totalExpense;
+
+    // Simple prediction: assume next month spending/income will follow the monthly average
+    // For this simple version, we assume the history is 1 month if not specified.
+    // In a real app, we'd calculate the number of months between first and last transaction.
+
+    double averageMonthlyIncome = totalIncome;
+    double averageMonthlyExpense = totalExpense;
+
+    return currentBalance + (averageMonthlyIncome - averageMonthlyExpense);
   }
 }
