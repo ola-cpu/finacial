@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'routes/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // We initialize Supabase and wait for it before starting the app
-  // to ensure providers have a valid client.
+  // Initialize Hive for offline storage
+  await Hive.initFlutter();
+  await Hive.openBox('incomes');
+  await Hive.openBox('expenses');
+  await Hive.openBox('budgets');
+  await Hive.openBox('goals');
+
+  // Initialize Supabase
   await _initSupabase();
 
   runApp(const ProviderScope(child: MyApp()));

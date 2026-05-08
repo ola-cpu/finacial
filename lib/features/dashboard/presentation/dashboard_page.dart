@@ -12,6 +12,14 @@ class DashboardPage extends ConsumerWidget {
         title: const Text('Dashboard'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.flag),
+            onPressed: () => context.push('/goals'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+            onPressed: () => context.push('/statistics'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => context.go('/login'),
           )
@@ -27,8 +35,8 @@ class DashboardPage extends ConsumerWidget {
               child: const ListTile(
                 contentPadding: EdgeInsets.all(20),
                 title: Text('Solde Total', style: TextStyle(fontSize: 18)),
-                subtitle: Text('250 000 FCFA', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF50C878))),
-                trailing: Icon(Icons.account_balance, color: const Color(0xFF50C878), size: 40),
+                subtitle: Text('250 000 FCFA', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF50C878))),
+                trailing: Icon(Icons.account_balance, color: Color(0xFF50C878), size: 40),
               ),
             ),
             const SizedBox(height: 24),
@@ -36,7 +44,7 @@ class DashboardPage extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Transactions Récentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('Voir tout', style: TextStyle(color: const Color(0xFF50C878))),
+                Text('Voir tout', style: TextStyle(color: Color(0xFF50C878))),
               ],
             ),
             const SizedBox(height: 12),
@@ -67,10 +75,23 @@ class DashboardPage extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: const Color(0xFF50C878),
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'income',
+            onPressed: () => context.push('/add-income'),
+            backgroundColor: const Color(0xFF50C878),
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: 'expense',
+            onPressed: () => context.push('/add-expense'),
+            backgroundColor: Colors.redAccent,
+            child: const Icon(Icons.remove),
+          ),
+        ],
       ),
     );
   }
