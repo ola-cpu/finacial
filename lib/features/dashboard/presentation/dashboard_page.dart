@@ -27,8 +27,8 @@ class DashboardPage extends ConsumerWidget {
               child: const ListTile(
                 contentPadding: EdgeInsets.all(20),
                 title: Text('Solde Total', style: TextStyle(fontSize: 18)),
-                subtitle: Text('250 000 FCFA', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.emerald)),
-                trailing: Icon(Icons.account_balance, color: Colors.emerald, size: 40),
+                subtitle: Text('250 000 FCFA', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF50C878))),
+                trailing: Icon(Icons.account_balance, color: const Color(0xFF50C878), size: 40),
               ),
             ),
             const SizedBox(height: 24),
@@ -36,7 +36,7 @@ class DashboardPage extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Transactions Récentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('Voir tout', style: TextStyle(color: Colors.emerald)),
+                Text('Voir tout', style: TextStyle(color: const Color(0xFF50C878))),
               ],
             ),
             const SizedBox(height: 12),
@@ -69,7 +69,7 @@ class DashboardPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
-        backgroundColor: Colors.emerald,
+        backgroundColor: const Color(0xFF50C878),
         child: const Icon(Icons.add),
       ),
     );
