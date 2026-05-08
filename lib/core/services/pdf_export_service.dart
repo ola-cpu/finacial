@@ -12,7 +12,7 @@ class PdfExportService {
       pw.Page(
         build: (pw.Context context) {
           return pw.Column(
-            cross: pw.CrossAxisAlignment.start,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Header(level: 0, child: pw.Text("Rapport Financier")),
               pw.SizedBox(height: 20),
