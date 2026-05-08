@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../auth/providers/auth_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -21,7 +22,12 @@ class DashboardPage extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => context.go('/login'),
+            onPressed: () async {
+              await ref.read(authControllerProvider.notifier).signOut();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            },
           )
         ],
       ),
