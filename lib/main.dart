@@ -6,14 +6,22 @@ import 'routes/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Note: These are placeholders. In a real app, you would use your actual Supabase URL and Anon Key.
-  // For the purpose of this task, we will initialize with placeholder values if they are not provided.
-  await Supabase.initialize(
-    url: 'https://your-project.supabase.co',
-    anonKey: 'your-anon-key',
-  );
+  // We initialize Supabase and wait for it before starting the app
+  // to ensure providers have a valid client.
+  await _initSupabase();
 
   runApp(const ProviderScope(child: MyApp()));
+}
+
+Future<void> _initSupabase() async {
+  try {
+    await Supabase.initialize(
+      url: 'https://placeholder-url.supabase.co',
+      anonKey: 'placeholder-anon-key',
+    );
+  } catch (e) {
+    debugPrint('Supabase initialization failed: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -27,7 +35,7 @@ class MyApp extends StatelessWidget {
       title: 'Finance Manager',
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.emerald,
+        colorSchemeSeed: const Color(0xFF50C878),
         brightness: Brightness.dark,
       ),
     );

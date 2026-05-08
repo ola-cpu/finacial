@@ -11,7 +11,7 @@ class LoginPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.account_balance_wallet, size: 100, color: Colors.emerald),
+            const Icon(Icons.account_balance_wallet, size: 100, color: const Color(0xFF50C878)),
             const SizedBox(height: 20),
             const Text(
               'Finance Manager',
@@ -21,7 +21,7 @@ class LoginPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () => context.go('/dashboard'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.emerald,
+                backgroundColor: const Color(0xFF50C878),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               ),
