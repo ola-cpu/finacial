@@ -25,6 +25,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _submit() async {
+    if (ref.read(authControllerProvider).isLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
@@ -39,14 +40,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (mounted) {
       final authState = ref.read(authControllerProvider);
       if (authState.hasError) {
-        String message = authState.error.toString();
+        String message = 'Une erreur est survenue';
         if (authState.error is AuthException) {
           final authException = authState.error as AuthException;
           if (authException.statusCode == '429') {
-            message = 'Too many requests. Please wait a moment and try again.';
+            message = 'Trop de tentatives. Veuillez patienter un instant et réessayer.';
           } else {
             message = authException.message;
           }
+        } else {
+          message = authState.error.toString();
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -90,7 +93,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty || !value.contains('@')) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer votre email';
+                    }
+                    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                    if (!emailRegex.hasMatch(value)) {
                       return 'Veuillez entrer un email valide';
                     }
                     return null;

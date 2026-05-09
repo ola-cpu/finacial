@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../features/auth/presentation/login_page.dart';
 import '../features/dashboard/presentation/dashboard_page.dart';
@@ -11,6 +11,20 @@ import '../features/analytics/presentation/analytics_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login',
+  redirect: (context, state) {
+    final session = Supabase.instance.client.auth.currentSession;
+    final isLoggingIn = state.matchedLocation == '/login';
+
+    if (session == null) {
+      return isLoggingIn ? null : '/login';
+    }
+
+    if (isLoggingIn) {
+      return '/dashboard';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/login',
