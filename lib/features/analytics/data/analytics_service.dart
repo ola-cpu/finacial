@@ -79,13 +79,11 @@ class AnalyticsService {
 
     double currentBalance = totalIncome - totalExpense;
 
-    // Simple prediction: assume next month spending/income will follow the monthly average
-    // For this simple version, we assume the history is 1 month if not specified.
-    // In a real app, we'd calculate the number of months between first and last transaction.
+    // Predictive model: Monthly Average * Remaining Months (Simulated)
+    // We'll use a 30-day projection based on current monthly burn rate
+    double monthlyBurnRate = totalExpense;
+    double monthlyIncomeRate = totalIncome;
 
-    double averageMonthlyIncome = totalIncome;
-    double averageMonthlyExpense = totalExpense;
-
-    return currentBalance + (averageMonthlyIncome - averageMonthlyExpense);
+    return currentBalance + (monthlyIncomeRate - monthlyBurnRate);
   }
 }

@@ -42,14 +42,14 @@ class ExpenseService {
   }
 
   Future<void> updateExpense({
-    required int index,
+    required dynamic key,
     required String title,
     required double amount,
     required String category,
   }) async {
     final user = supabase.auth.currentUser;
     final box = Hive.box('expenses');
-    final expense = box.getAt(index);
+    final expense = Map<String, dynamic>.from(box.get(key));
     final remoteId = expense['remote_id'];
 
     if (user != null && remoteId != null) {
@@ -64,18 +64,18 @@ class ExpenseService {
       }
     }
 
-    await box.putAt(index, {
-      ...Map<String, dynamic>.from(expense),
+    await box.put(key, {
+      ...expense,
       'title': title,
       'amount': amount,
       'category': category,
     });
   }
 
-  Future<void> deleteExpense(int index) async {
+  Future<void> deleteExpense(dynamic key) async {
     final user = supabase.auth.currentUser;
     final box = Hive.box('expenses');
-    final expense = box.getAt(index);
+    final expense = Map<String, dynamic>.from(box.get(key));
     final remoteId = expense['remote_id'];
 
     if (user != null && remoteId != null) {
@@ -86,7 +86,7 @@ class ExpenseService {
       }
     }
 
-    await box.deleteAt(index);
+    await box.delete(key);
   }
 
   Future<List<Map<String, dynamic>>> getExpenses() async {
@@ -94,7 +94,7 @@ class ExpenseService {
     return box.keys.map((key) {
       final value = box.get(key);
       return {
-        'index': key,
+        'key': key,
         ...Map<String, dynamic>.from(value),
       };
     }).toList();

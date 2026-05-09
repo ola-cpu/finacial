@@ -16,6 +16,7 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   late String _category;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -32,6 +33,14 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
     super.dispose();
   }
 
+  Future<void> _handleError(Object e) async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.income != null;
@@ -43,13 +52,22 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () async {
-                await ref.read(incomeServiceProvider).deleteIncome(widget.income!['index']);
-                if (mounted) context.pop();
+                setState(() => _isLoading = true);
+                try {
+                  await ref.read(incomeServiceProvider).deleteIncome(widget.income!['key']);
+                  if (mounted) context.pop();
+                } catch (e) {
+                  _handleError(e);
+                } finally {
+                  if (mounted) setState(() => _isLoading = false);
+                }
               },
             ),
         ],
       ),
-      body: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -58,13 +76,18 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(labelText: 'Titre'),
-                validator: (value) => value!.isEmpty ? 'Entrez un titre' : null,
+                validator: (value) => (value == null || value.isEmpty) ? 'Entrez un titre' : null,
               ),
               TextFormField(
                 controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Montant'),
                 keyboardType: TextInputType.number,
-                validator: (value) => value!.isEmpty ? 'Entrez un montant' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Entrez un montant';
+                  if (double.tryParse(value) == null) return 'Entrez un nombre valide';
+                  if (double.parse(value) <= 0) return 'Le montant doit être supérieur à 0';
+                  return null;
+                },
               ),
               DropdownButtonFormField<String>(
                 value: _category,
@@ -78,21 +101,28 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    if (isEditing) {
-                      await ref.read(incomeServiceProvider).updateIncome(
-                            index: widget.income!['index'],
-                            title: _titleController.text,
-                            amount: double.parse(_amountController.text),
-                            category: _category,
-                          );
-                    } else {
-                      await ref.read(incomeServiceProvider).addIncome(
-                            title: _titleController.text,
-                            amount: double.parse(_amountController.text),
-                            category: _category,
-                          );
+                    setState(() => _isLoading = true);
+                    try {
+                      if (isEditing) {
+                        await ref.read(incomeServiceProvider).updateIncome(
+                              key: widget.income!['key'],
+                              title: _titleController.text,
+                              amount: double.parse(_amountController.text),
+                              category: _category,
+                            );
+                      } else {
+                        await ref.read(incomeServiceProvider).addIncome(
+                              title: _titleController.text,
+                              amount: double.parse(_amountController.text),
+                              category: _category,
+                            );
+                      }
+                      if (mounted) context.pop();
+                    } catch (e) {
+                      _handleError(e);
+                    } finally {
+                      if (mounted) setState(() => _isLoading = false);
                     }
-                    if (mounted) context.pop();
                   }
                 },
                 child: Text(isEditing ? 'Mettre à jour' : 'Enregistrer'),

@@ -16,7 +16,6 @@ class IncomeService {
     final user = supabase.auth.currentUser;
     final now = DateTime.now().toIso8601String();
 
-    // Try to sync with Supabase first if online
     String? remoteId;
     if (user != null) {
       try {
@@ -32,7 +31,6 @@ class IncomeService {
       }
     }
 
-    // Save to Hive
     final box = Hive.box('incomes');
     await box.add({
       'remote_id': remoteId,
@@ -44,14 +42,14 @@ class IncomeService {
   }
 
   Future<void> updateIncome({
-    required int index,
+    required dynamic key,
     required String title,
     required double amount,
     required String category,
   }) async {
     final user = supabase.auth.currentUser;
     final box = Hive.box('incomes');
-    final income = box.getAt(index);
+    final income = Map<String, dynamic>.from(box.get(key));
     final remoteId = income['remote_id'];
 
     if (user != null && remoteId != null) {
@@ -66,18 +64,18 @@ class IncomeService {
       }
     }
 
-    await box.putAt(index, {
-      ...Map<String, dynamic>.from(income),
+    await box.put(key, {
+      ...income,
       'title': title,
       'amount': amount,
       'category': category,
     });
   }
 
-  Future<void> deleteIncome(int index) async {
+  Future<void> deleteIncome(dynamic key) async {
     final user = supabase.auth.currentUser;
     final box = Hive.box('incomes');
-    final income = box.getAt(index);
+    final income = Map<String, dynamic>.from(box.get(key));
     final remoteId = income['remote_id'];
 
     if (user != null && remoteId != null) {
@@ -88,7 +86,7 @@ class IncomeService {
       }
     }
 
-    await box.deleteAt(index);
+    await box.delete(key);
   }
 
   Future<List<Map<String, dynamic>>> getIncomes() async {
@@ -96,7 +94,7 @@ class IncomeService {
     return box.keys.map((key) {
       final value = box.get(key);
       return {
-        'index': key,
+        'key': key,
         ...Map<String, dynamic>.from(value),
       };
     }).toList();

@@ -3,16 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'routes/app_router.dart';
+import 'core/services/encryption_service.dart';
+import 'core/config/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive for offline storage
   await Hive.initFlutter();
-  await Hive.openBox('incomes');
-  await Hive.openBox('expenses');
-  await Hive.openBox('budgets');
-  await Hive.openBox('goals');
+
+  // Encryption
+  final encryptionKey = await EncryptionService.getOrCreateEncryptionKey();
+  final encryptionCipher = HiveAesCipher(encryptionKey);
+
+  await Hive.openBox('incomes', encryptionCipher: encryptionCipher);
+  await Hive.openBox('expenses', encryptionCipher: encryptionCipher);
+  await Hive.openBox('budgets', encryptionCipher: encryptionCipher);
+  await Hive.openBox('goals', encryptionCipher: encryptionCipher);
 
   // Initialize Supabase
   await _initSupabase();
@@ -23,8 +30,8 @@ void main() async {
 Future<void> _initSupabase() async {
   try {
     await Supabase.initialize(
-      url: 'https://rcjltzegihmtgogahehy.supabase.co',
-      anonKey: 'sb_publishable_xN7YTA7-7ZfGjVtpQe6uxw_QrrvjhO6',
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
     );
   } catch (e) {
     debugPrint('Supabase initialization failed: $e');
