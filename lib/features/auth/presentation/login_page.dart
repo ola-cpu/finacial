@@ -41,7 +41,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (authState.hasError) {
         String message = authState.error.toString();
         if (authState.error is AuthException) {
-          message = (authState.error as AuthException).message;
+          final authException = authState.error as AuthException;
+          if (authException.statusCode == '429') {
+            message = 'Too many requests. Please wait a moment and try again.';
+          } else {
+            message = authException.message;
+          }
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
