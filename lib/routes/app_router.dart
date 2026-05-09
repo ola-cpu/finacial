@@ -7,6 +7,7 @@ import '../features/incomes/presentation/add_income_page.dart';
 import '../features/expenses/presentation/add_expense_page.dart';
 import '../features/statistics/presentation/statistics_page.dart';
 import '../features/goals/presentation/goals_page.dart';
+import '../features/analytics/presentation/analytics_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login',
@@ -21,11 +22,11 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/add-income',
-      builder: (context, state) => const AddIncomePage(),
+      builder: (context, state) => AddIncomePage(income: state.extra as Map<String, dynamic>?),
     ),
     GoRoute(
       path: '/add-expense',
-      builder: (context, state) => const AddExpensePage(),
+      builder: (context, state) => AddExpensePage(expense: state.extra as Map<String, dynamic>?),
     ),
     GoRoute(
       path: '/statistics',
@@ -34,6 +35,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/goals',
       builder: (context, state) => const GoalsPage(),
+    ),
+    GoRoute(
+      path: '/analytics',
+      builder: (context, state) => const AnalyticsPage(),
     ),
   ],
 );
