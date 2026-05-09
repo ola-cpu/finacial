@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -27,7 +28,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final password = _passwordController.text;
 
     if (_isLogin) {
       await ref.read(authControllerProvider.notifier).signIn(email, password);
@@ -38,8 +39,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (mounted) {
       final authState = ref.read(authControllerProvider);
       if (authState.hasError) {
+        String message = authState.error.toString();
+        if (authState.error is AuthException) {
+          message = (authState.error as AuthException).message;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authState.error.toString())),
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       } else {
         context.go('/dashboard');
