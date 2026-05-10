@@ -1,25 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'routes/app_router.dart';
-import 'core/services/encryption_service.dart';
 import 'core/config/app_config.dart';
+import 'core/providers/supabase_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Hive for offline storage
-  await Hive.initFlutter();
-
-  // Encryption
-  final encryptionKey = await EncryptionService.getOrCreateEncryptionKey();
-  final encryptionCipher = HiveAesCipher(encryptionKey);
-
-  await Hive.openBox('incomes', encryptionCipher: encryptionCipher);
-  await Hive.openBox('expenses', encryptionCipher: encryptionCipher);
-  await Hive.openBox('budgets', encryptionCipher: encryptionCipher);
-  await Hive.openBox('goals', encryptionCipher: encryptionCipher);
 
   // Initialize Supabase
   await _initSupabase();
@@ -38,8 +26,31 @@ Future<void> _initSupabase() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    _setupConnectivityListener();
+  }
+
+  void _setupConnectivityListener() {
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      if (results.any((result) => result != ConnectivityResult.none)) {
+        final syncService = ref.read(syncServiceProvider);
+        final user = ref.read(userProvider);
+        if (user != null) {
+          syncService.syncAll();
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

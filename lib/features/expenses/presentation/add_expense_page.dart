@@ -54,7 +54,7 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
               onPressed: () async {
                 setState(() => _isLoading = true);
                 try {
-                  await ref.read(expenseServiceProvider).deleteExpense(widget.expense!['key']);
+                  await ref.read(expenseServiceProvider).deleteExpense(widget.expense!['id']);
                   if (mounted) context.pop();
                 } catch (e) {
                   _handleError(e);
@@ -105,7 +105,7 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
                     try {
                       if (isEditing) {
                         await ref.read(expenseServiceProvider).updateExpense(
-                              key: widget.expense!['key'],
+                              id: widget.expense!['id'],
                               title: _titleController.text,
                               amount: double.parse(_amountController.text),
                               category: _category,

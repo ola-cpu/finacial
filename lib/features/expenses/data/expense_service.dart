@@ -1,107 +1,98 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:drift/drift.dart';
 import '../../../core/providers/supabase_provider.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/services/sync_service.dart';
 
 class ExpenseService {
   final SupabaseClient supabase;
+  final AppDatabase database;
+  final SyncService syncService;
 
-  ExpenseService(this.supabase);
+  ExpenseService(this.supabase, this.database, this.syncService);
 
   Future<void> addExpense({
     required String title,
     required double amount,
     required String category,
   }) async {
-    final user = supabase.auth.currentUser;
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now();
 
-    String? remoteId;
-    if (user != null) {
-      try {
-        final response = await supabase.from('expenses').insert({
-          'user_id': user.id,
-          'title': title,
-          'amount': amount,
-          'category': category,
-        }).select('id').single();
-        remoteId = response['id'].toString();
-      } catch (e) {
-        print('Supabase sync failed: $e');
-      }
-    }
+    await database.into(database.expenses).insert(
+          ExpensesCompanion.insert(
+            title: title,
+            amount: amount,
+            category: category,
+            createdAt: now,
+            syncStatus: const Value(1), // pending_insert
+          ),
+        );
 
-    final box = Hive.box('expenses');
-    await box.add({
-      'remote_id': remoteId,
-      'title': title,
-      'amount': amount,
-      'category': category,
-      'created_at': now,
-    });
+    _triggerSync();
   }
 
   Future<void> updateExpense({
-    required dynamic key,
+    required int id,
     required String title,
     required double amount,
     required String category,
   }) async {
-    final user = supabase.auth.currentUser;
-    final box = Hive.box('expenses');
-    final expense = Map<String, dynamic>.from(box.get(key));
-    final remoteId = expense['remote_id'];
+    final existing = await (database.select(database.expenses)..where((t) => t.id.equals(id))).getSingle();
 
-    if (user != null && remoteId != null) {
-      try {
-        await supabase.from('expenses').update({
-          'title': title,
-          'amount': amount,
-          'category': category,
-        }).eq('id', remoteId);
-      } catch (e) {
-        print('Supabase update failed: $e');
-      }
-    }
+    await (database.update(database.expenses)..where((t) => t.id.equals(id))).write(
+      ExpensesCompanion(
+        title: Value(title),
+        amount: Value(amount),
+        category: Value(category),
+        syncStatus: Value(existing.remoteId == null ? 1 : 2), // remain pending_insert if not yet synced, otherwise pending_update
+      ),
+    );
 
-    await box.put(key, {
-      ...expense,
-      'title': title,
-      'amount': amount,
-      'category': category,
-    });
+    _triggerSync();
   }
 
-  Future<void> deleteExpense(dynamic key) async {
-    final user = supabase.auth.currentUser;
-    final box = Hive.box('expenses');
-    final expense = Map<String, dynamic>.from(box.get(key));
-    final remoteId = expense['remote_id'];
+  Future<void> deleteExpense(int id) async {
+    final existing = await (database.select(database.expenses)..where((t) => t.id.equals(id))).getSingle();
 
-    if (user != null && remoteId != null) {
-      try {
-        await supabase.from('expenses').delete().eq('id', remoteId);
-      } catch (e) {
-        print('Supabase delete failed: $e');
-      }
+    if (existing.remoteId == null) {
+      // Never synced, just delete locally
+      await (database.delete(database.expenses)..where((t) => t.id.equals(id))).go();
+    } else {
+      // Mark for deletion
+      await (database.update(database.expenses)..where((t) => t.id.equals(id))).write(
+        const ExpensesCompanion(syncStatus: Value(3)),
+      );
     }
 
-    await box.delete(key);
+    _triggerSync();
   }
 
   Future<List<Map<String, dynamic>>> getExpenses() async {
-    final box = Hive.box('expenses');
-    return box.keys.map((key) {
-      final value = box.get(key);
-      return {
-        'key': key,
-        ...Map<String, dynamic>.from(value),
-      };
+    final expenses = await (database.select(database.expenses)
+          ..where((t) => t.syncStatus.isSmallerThanValue(3)))
+        .get();
+
+    return expenses.map((e) => {
+      'id': e.id,
+      'remote_id': e.remoteId,
+      'title': e.title,
+      'amount': e.amount,
+      'category': e.category,
+      'created_at': e.createdAt.toIso8601String(),
     }).toList();
+  }
+
+  void _triggerSync() {
+    if (supabase.auth.currentUser != null) {
+      syncService.pushChanges();
+    }
   }
 }
 
 final expenseServiceProvider = Provider((ref) {
   final supabase = ref.watch(supabaseProvider);
-  return ExpenseService(supabase);
+  final database = ref.watch(databaseProvider);
+  final syncService = ref.watch(syncServiceProvider);
+  return ExpenseService(supabase, database, syncService);
 });
