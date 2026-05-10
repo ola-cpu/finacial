@@ -7,8 +7,7 @@ import '../../../core/providers/database_provider.dart';
 
 final vaultsProvider = FutureProvider((ref) {
   final user = ref.watch(currentUserProvider);
-  if (user == null) return <Contribution>[];
-  return ref.watch(vaultServiceProvider).getVaults(user.id);
+  return ref.watch(vaultServiceProvider).getVaults(user?.id);
 });
 
 final availableChallengesProvider = FutureProvider((ref) {

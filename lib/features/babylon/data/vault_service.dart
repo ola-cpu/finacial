@@ -8,11 +8,17 @@ class VaultService {
 
   VaultService(this.database);
 
-  Future<List<Contribution>> getVaults(int userId) async {
-    return await (database.select(database.contributions)..where((t) => t.userId.equals(userId))).get();
+  Future<List<Contribution>> getVaults(int? userId) async {
+    final query = database.select(database.contributions);
+    if (userId != null) {
+      query.where((t) => t.userId.equals(userId));
+    } else {
+      query.where((t) => t.userId.isNull());
+    }
+    return await query.get();
   }
 
-  Future<void> createDefaultVaults(int userId) async {
+  Future<void> createDefaultVaults(int? userId) async {
     final defaultVaults = [
       {'title': 'Épargne', 'percentage': 10.0, 'type': 'savings'},
       {'title': 'Investissements', 'percentage': 20.0, 'type': 'investment'},
@@ -34,11 +40,16 @@ class VaultService {
     }
   }
 
-  Future<void> distributeIncome(int userId, double amount) async {
+  Future<void> distributeIncome(int? userId, double amount) async {
     final vaults = await getVaults(userId);
-    final user = await (database.select(database.users)..where((t) => t.id.equals(userId))).getSingle();
+    double savingPercentage = 10.0;
 
-    // Always pay yourself first - minimum user.savingPercentage (default 10%)
+    if (userId != null) {
+      final user = await (database.select(database.users)..where((t) => t.id.equals(userId))).getSingle();
+      savingPercentage = user.savingPercentage;
+    }
+
+    // Always pay yourself first - minimum savingPercentage (default 10%)
     // If no vaults are set up, we'll just skip for now, but usually they are created at signup.
 
     for (var vault in vaults) {
@@ -54,7 +65,7 @@ class VaultService {
 
   /// CREATE: Creates a new vault (contribution) for a user.
   Future<void> createVault({
-    required int userId,
+    int? userId,
     required String title,
     required double percentage,
     required String type,
