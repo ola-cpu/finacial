@@ -4,11 +4,13 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/providers/database_provider.dart';
+import '../../babylon/data/vault_service.dart';
 
 class AuthService {
   final AppDatabase database;
+  final VaultService? vaultService;
 
-  AuthService(this.database);
+  AuthService(this.database, [this.vaultService]);
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -28,6 +30,11 @@ class AuthService {
     );
 
     final id = await database.into(database.users).insert(companion);
+
+    if (vaultService != null) {
+      await vaultService!.createDefaultVaults(id);
+    }
+
     return (database.select(database.users)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
@@ -60,7 +67,8 @@ class AuthService {
 
 final authServiceProvider = Provider((ref) {
   final database = ref.watch(databaseProvider);
-  return AuthService(database);
+  final vaultService = ref.watch(vaultServiceProvider);
+  return AuthService(database, vaultService);
 });
 
 final currentUserProvider = StateProvider<User?>((ref) => null);

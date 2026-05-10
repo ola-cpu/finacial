@@ -1,13 +1,15 @@
 import '../../expenses/data/expense_service.dart';
 import '../../incomes/data/income_service.dart';
 import '../../budgets/data/budget_service.dart';
+import '../../goals/data/goal_service.dart';
 
 class AnalyticsService {
   final ExpenseService _expenseService;
   final IncomeService _incomeService;
   final BudgetService _budgetService;
+  final GoalService? _goalService;
 
-  AnalyticsService(this._expenseService, this._incomeService, this._budgetService);
+  AnalyticsService(this._expenseService, this._incomeService, this._budgetService, [this._goalService]);
 
   Future<Map<String, double>> analyzeSpendingHabits() async {
     final expenses = await _expenseService.getExpenses();
@@ -28,7 +30,12 @@ class AnalyticsService {
         proposals.add("Vous dépensez beaucoup en $category. Envisagez de réduire de 10% pour économiser ${amount * 0.1} FCFA.");
       }
     });
-    if (proposals.isEmpty) {
+
+    // Babylon inspired advice
+    proposals.add("L'Homme le plus riche de Babylone dit : 'Une partie de tout ce que vous gagnez est à vous pour être gardée.'");
+    proposals.add("Assurez-vous de mettre de côté au moins 10% de vos revenus avant toute dépense.");
+
+    if (proposals.length <= 2) {
       proposals.add("Vos dépenses sont bien maîtrisées. Continuez ainsi !");
     }
     return proposals;
@@ -57,6 +64,19 @@ class AnalyticsService {
         alerts.add("Attention : Vous avez utilisé 90% de votre budget $category.");
       }
     }
+
+    // Check emergency fund if goal service is available
+    if (_goalService != null) {
+      final goals = await _goalService!.getGoals();
+      final emergencyGoal = goals.firstWhere(
+        (g) => g['title'].toString().toLowerCase().contains('urgence'),
+        orElse: () => {},
+      );
+      if (emergencyGoal.isNotEmpty && emergencyGoal['current_amount'] < emergencyGoal['target_amount'] * 0.5) {
+        alerts.add("Conseil : Votre fonds d'urgence est encore faible. Donnez-lui la priorité.");
+      }
+    }
+
     return alerts;
   }
 
@@ -79,11 +99,21 @@ class AnalyticsService {
 
     double currentBalance = totalIncome - totalExpense;
 
-    // Predictive model: Monthly Average * Remaining Months (Simulated)
-    // We'll use a 30-day projection based on current monthly burn rate
     double monthlyBurnRate = totalExpense;
     double monthlyIncomeRate = totalIncome;
 
     return currentBalance + (monthlyIncomeRate - monthlyBurnRate);
+  }
+
+  List<String> getBabylonPrinciples() {
+    return [
+      "Commencez par garnir votre bourse (Épargnez 1/10ème).",
+      "Contrôlez vos dépenses.",
+      "Faites fructifier votre or.",
+      "Protégez votre trésor contre la perte.",
+      "Faites de votre demeure un investissement profitable.",
+      "Assurez un revenu pour l'avenir.",
+      "Augmentez votre capacité d'acquérir des biens.",
+    ];
   }
 }

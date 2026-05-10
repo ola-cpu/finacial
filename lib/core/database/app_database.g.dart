@@ -47,9 +47,49 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _financialScoreMeta =
+      const VerificationMeta('financialScore');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, email, password, name, profileImage, createdAt];
+  late final GeneratedColumn<double> financialScore = GeneratedColumn<double>(
+      'financial_score', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<String> level = GeneratedColumn<String>(
+      'level', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Débutant'));
+  static const VerificationMeta _pointsMeta = const VerificationMeta('points');
+  @override
+  late final GeneratedColumn<int> points = GeneratedColumn<int>(
+      'points', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _savingPercentageMeta =
+      const VerificationMeta('savingPercentage');
+  @override
+  late final GeneratedColumn<double> savingPercentage = GeneratedColumn<double>(
+      'saving_percentage', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(10));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        email,
+        password,
+        name,
+        profileImage,
+        createdAt,
+        financialScore,
+        level,
+        points,
+        savingPercentage
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -91,6 +131,26 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('financial_score')) {
+      context.handle(
+          _financialScoreMeta,
+          financialScore.isAcceptableOrUnknown(
+              data['financial_score']!, _financialScoreMeta));
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+          _levelMeta, level.isAcceptableOrUnknown(data['level']!, _levelMeta));
+    }
+    if (data.containsKey('points')) {
+      context.handle(_pointsMeta,
+          points.isAcceptableOrUnknown(data['points']!, _pointsMeta));
+    }
+    if (data.containsKey('saving_percentage')) {
+      context.handle(
+          _savingPercentageMeta,
+          savingPercentage.isAcceptableOrUnknown(
+              data['saving_percentage']!, _savingPercentageMeta));
+    }
     return context;
   }
 
@@ -112,6 +172,14 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
           .read(DriftSqlType.string, data['${effectivePrefix}profile_image']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      financialScore: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}financial_score'])!,
+      level: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}level'])!,
+      points: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}points'])!,
+      savingPercentage: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}saving_percentage'])!,
     );
   }
 
@@ -128,13 +196,21 @@ class User extends DataClass implements Insertable<User> {
   final String? name;
   final String? profileImage;
   final DateTime createdAt;
+  final double financialScore;
+  final String level;
+  final int points;
+  final double savingPercentage;
   const User(
       {required this.id,
       required this.email,
       required this.password,
       this.name,
       this.profileImage,
-      required this.createdAt});
+      required this.createdAt,
+      required this.financialScore,
+      required this.level,
+      required this.points,
+      required this.savingPercentage});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -148,6 +224,10 @@ class User extends DataClass implements Insertable<User> {
       map['profile_image'] = Variable<String>(profileImage);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['financial_score'] = Variable<double>(financialScore);
+    map['level'] = Variable<String>(level);
+    map['points'] = Variable<int>(points);
+    map['saving_percentage'] = Variable<double>(savingPercentage);
     return map;
   }
 
@@ -161,6 +241,10 @@ class User extends DataClass implements Insertable<User> {
           ? const Value.absent()
           : Value(profileImage),
       createdAt: Value(createdAt),
+      financialScore: Value(financialScore),
+      level: Value(level),
+      points: Value(points),
+      savingPercentage: Value(savingPercentage),
     );
   }
 
@@ -174,6 +258,10 @@ class User extends DataClass implements Insertable<User> {
       name: serializer.fromJson<String?>(json['name']),
       profileImage: serializer.fromJson<String?>(json['profileImage']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      financialScore: serializer.fromJson<double>(json['financialScore']),
+      level: serializer.fromJson<String>(json['level']),
+      points: serializer.fromJson<int>(json['points']),
+      savingPercentage: serializer.fromJson<double>(json['savingPercentage']),
     );
   }
   @override
@@ -186,6 +274,10 @@ class User extends DataClass implements Insertable<User> {
       'name': serializer.toJson<String?>(name),
       'profileImage': serializer.toJson<String?>(profileImage),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'financialScore': serializer.toJson<double>(financialScore),
+      'level': serializer.toJson<String>(level),
+      'points': serializer.toJson<int>(points),
+      'savingPercentage': serializer.toJson<double>(savingPercentage),
     };
   }
 
@@ -195,7 +287,11 @@ class User extends DataClass implements Insertable<User> {
           String? password,
           Value<String?> name = const Value.absent(),
           Value<String?> profileImage = const Value.absent(),
-          DateTime? createdAt}) =>
+          DateTime? createdAt,
+          double? financialScore,
+          String? level,
+          int? points,
+          double? savingPercentage}) =>
       User(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -204,6 +300,10 @@ class User extends DataClass implements Insertable<User> {
         profileImage:
             profileImage.present ? profileImage.value : this.profileImage,
         createdAt: createdAt ?? this.createdAt,
+        financialScore: financialScore ?? this.financialScore,
+        level: level ?? this.level,
+        points: points ?? this.points,
+        savingPercentage: savingPercentage ?? this.savingPercentage,
       );
   User copyWithCompanion(UsersCompanion data) {
     return User(
@@ -215,6 +315,14 @@ class User extends DataClass implements Insertable<User> {
           ? data.profileImage.value
           : this.profileImage,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      financialScore: data.financialScore.present
+          ? data.financialScore.value
+          : this.financialScore,
+      level: data.level.present ? data.level.value : this.level,
+      points: data.points.present ? data.points.value : this.points,
+      savingPercentage: data.savingPercentage.present
+          ? data.savingPercentage.value
+          : this.savingPercentage,
     );
   }
 
@@ -226,14 +334,18 @@ class User extends DataClass implements Insertable<User> {
           ..write('password: $password, ')
           ..write('name: $name, ')
           ..write('profileImage: $profileImage, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('financialScore: $financialScore, ')
+          ..write('level: $level, ')
+          ..write('points: $points, ')
+          ..write('savingPercentage: $savingPercentage')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, email, password, name, profileImage, createdAt);
+  int get hashCode => Object.hash(id, email, password, name, profileImage,
+      createdAt, financialScore, level, points, savingPercentage);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -243,7 +355,11 @@ class User extends DataClass implements Insertable<User> {
           other.password == this.password &&
           other.name == this.name &&
           other.profileImage == this.profileImage &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.financialScore == this.financialScore &&
+          other.level == this.level &&
+          other.points == this.points &&
+          other.savingPercentage == this.savingPercentage);
 }
 
 class UsersCompanion extends UpdateCompanion<User> {
@@ -253,6 +369,10 @@ class UsersCompanion extends UpdateCompanion<User> {
   final Value<String?> name;
   final Value<String?> profileImage;
   final Value<DateTime> createdAt;
+  final Value<double> financialScore;
+  final Value<String> level;
+  final Value<int> points;
+  final Value<double> savingPercentage;
   const UsersCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -260,6 +380,10 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.name = const Value.absent(),
     this.profileImage = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.financialScore = const Value.absent(),
+    this.level = const Value.absent(),
+    this.points = const Value.absent(),
+    this.savingPercentage = const Value.absent(),
   });
   UsersCompanion.insert({
     this.id = const Value.absent(),
@@ -268,6 +392,10 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.name = const Value.absent(),
     this.profileImage = const Value.absent(),
     required DateTime createdAt,
+    this.financialScore = const Value.absent(),
+    this.level = const Value.absent(),
+    this.points = const Value.absent(),
+    this.savingPercentage = const Value.absent(),
   })  : email = Value(email),
         password = Value(password),
         createdAt = Value(createdAt);
@@ -278,6 +406,10 @@ class UsersCompanion extends UpdateCompanion<User> {
     Expression<String>? name,
     Expression<String>? profileImage,
     Expression<DateTime>? createdAt,
+    Expression<double>? financialScore,
+    Expression<String>? level,
+    Expression<int>? points,
+    Expression<double>? savingPercentage,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -286,6 +418,10 @@ class UsersCompanion extends UpdateCompanion<User> {
       if (name != null) 'name': name,
       if (profileImage != null) 'profile_image': profileImage,
       if (createdAt != null) 'created_at': createdAt,
+      if (financialScore != null) 'financial_score': financialScore,
+      if (level != null) 'level': level,
+      if (points != null) 'points': points,
+      if (savingPercentage != null) 'saving_percentage': savingPercentage,
     });
   }
 
@@ -295,7 +431,11 @@ class UsersCompanion extends UpdateCompanion<User> {
       Value<String>? password,
       Value<String?>? name,
       Value<String?>? profileImage,
-      Value<DateTime>? createdAt}) {
+      Value<DateTime>? createdAt,
+      Value<double>? financialScore,
+      Value<String>? level,
+      Value<int>? points,
+      Value<double>? savingPercentage}) {
     return UsersCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -303,6 +443,10 @@ class UsersCompanion extends UpdateCompanion<User> {
       name: name ?? this.name,
       profileImage: profileImage ?? this.profileImage,
       createdAt: createdAt ?? this.createdAt,
+      financialScore: financialScore ?? this.financialScore,
+      level: level ?? this.level,
+      points: points ?? this.points,
+      savingPercentage: savingPercentage ?? this.savingPercentage,
     );
   }
 
@@ -327,6 +471,18 @@ class UsersCompanion extends UpdateCompanion<User> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (financialScore.present) {
+      map['financial_score'] = Variable<double>(financialScore.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<String>(level.value);
+    }
+    if (points.present) {
+      map['points'] = Variable<int>(points.value);
+    }
+    if (savingPercentage.present) {
+      map['saving_percentage'] = Variable<double>(savingPercentage.value);
+    }
     return map;
   }
 
@@ -338,7 +494,11 @@ class UsersCompanion extends UpdateCompanion<User> {
           ..write('password: $password, ')
           ..write('name: $name, ')
           ..write('profileImage: $profileImage, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('financialScore: $financialScore, ')
+          ..write('level: $level, ')
+          ..write('points: $points, ')
+          ..write('savingPercentage: $savingPercentage')
           ..write(')'))
         .toString();
   }
@@ -2082,15 +2242,36 @@ class $ContributionsTable extends Contributions
       type: DriftSqlType.double,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _targetAmountMeta =
+      const VerificationMeta('targetAmount');
+  @override
+  late final GeneratedColumn<double> targetAmount = GeneratedColumn<double>(
+      'target_amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1000000));
   static const VerificationMeta _lastCalculationDateMeta =
       const VerificationMeta('lastCalculationDate');
   @override
   late final GeneratedColumn<DateTime> lastCalculationDate =
       GeneratedColumn<DateTime>('last_calculation_date', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, userId, title, percentage, totalAmount, lastCalculationDate];
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        title,
+        percentage,
+        totalAmount,
+        targetAmount,
+        lastCalculationDate,
+        type
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2128,11 +2309,21 @@ class $ContributionsTable extends Contributions
           totalAmount.isAcceptableOrUnknown(
               data['total_amount']!, _totalAmountMeta));
     }
+    if (data.containsKey('target_amount')) {
+      context.handle(
+          _targetAmountMeta,
+          targetAmount.isAcceptableOrUnknown(
+              data['target_amount']!, _targetAmountMeta));
+    }
     if (data.containsKey('last_calculation_date')) {
       context.handle(
           _lastCalculationDateMeta,
           lastCalculationDate.isAcceptableOrUnknown(
               data['last_calculation_date']!, _lastCalculationDateMeta));
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
     }
     return context;
   }
@@ -2153,9 +2344,13 @@ class $ContributionsTable extends Contributions
           .read(DriftSqlType.double, data['${effectivePrefix}percentage'])!,
       totalAmount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}total_amount'])!,
+      targetAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}target_amount'])!,
       lastCalculationDate: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}last_calculation_date']),
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type']),
     );
   }
 
@@ -2171,14 +2366,18 @@ class Contribution extends DataClass implements Insertable<Contribution> {
   final String title;
   final double percentage;
   final double totalAmount;
+  final double targetAmount;
   final DateTime? lastCalculationDate;
+  final String? type;
   const Contribution(
       {required this.id,
       this.userId,
       required this.title,
       required this.percentage,
       required this.totalAmount,
-      this.lastCalculationDate});
+      required this.targetAmount,
+      this.lastCalculationDate,
+      this.type});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2189,8 +2388,12 @@ class Contribution extends DataClass implements Insertable<Contribution> {
     map['title'] = Variable<String>(title);
     map['percentage'] = Variable<double>(percentage);
     map['total_amount'] = Variable<double>(totalAmount);
+    map['target_amount'] = Variable<double>(targetAmount);
     if (!nullToAbsent || lastCalculationDate != null) {
       map['last_calculation_date'] = Variable<DateTime>(lastCalculationDate);
+    }
+    if (!nullToAbsent || type != null) {
+      map['type'] = Variable<String>(type);
     }
     return map;
   }
@@ -2203,9 +2406,11 @@ class Contribution extends DataClass implements Insertable<Contribution> {
       title: Value(title),
       percentage: Value(percentage),
       totalAmount: Value(totalAmount),
+      targetAmount: Value(targetAmount),
       lastCalculationDate: lastCalculationDate == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCalculationDate),
+      type: type == null && nullToAbsent ? const Value.absent() : Value(type),
     );
   }
 
@@ -2218,8 +2423,10 @@ class Contribution extends DataClass implements Insertable<Contribution> {
       title: serializer.fromJson<String>(json['title']),
       percentage: serializer.fromJson<double>(json['percentage']),
       totalAmount: serializer.fromJson<double>(json['totalAmount']),
+      targetAmount: serializer.fromJson<double>(json['targetAmount']),
       lastCalculationDate:
           serializer.fromJson<DateTime?>(json['lastCalculationDate']),
+      type: serializer.fromJson<String?>(json['type']),
     );
   }
   @override
@@ -2231,7 +2438,9 @@ class Contribution extends DataClass implements Insertable<Contribution> {
       'title': serializer.toJson<String>(title),
       'percentage': serializer.toJson<double>(percentage),
       'totalAmount': serializer.toJson<double>(totalAmount),
+      'targetAmount': serializer.toJson<double>(targetAmount),
       'lastCalculationDate': serializer.toJson<DateTime?>(lastCalculationDate),
+      'type': serializer.toJson<String?>(type),
     };
   }
 
@@ -2241,16 +2450,20 @@ class Contribution extends DataClass implements Insertable<Contribution> {
           String? title,
           double? percentage,
           double? totalAmount,
-          Value<DateTime?> lastCalculationDate = const Value.absent()}) =>
+          double? targetAmount,
+          Value<DateTime?> lastCalculationDate = const Value.absent(),
+          Value<String?> type = const Value.absent()}) =>
       Contribution(
         id: id ?? this.id,
         userId: userId.present ? userId.value : this.userId,
         title: title ?? this.title,
         percentage: percentage ?? this.percentage,
         totalAmount: totalAmount ?? this.totalAmount,
+        targetAmount: targetAmount ?? this.targetAmount,
         lastCalculationDate: lastCalculationDate.present
             ? lastCalculationDate.value
             : this.lastCalculationDate,
+        type: type.present ? type.value : this.type,
       );
   Contribution copyWithCompanion(ContributionsCompanion data) {
     return Contribution(
@@ -2261,9 +2474,13 @@ class Contribution extends DataClass implements Insertable<Contribution> {
           data.percentage.present ? data.percentage.value : this.percentage,
       totalAmount:
           data.totalAmount.present ? data.totalAmount.value : this.totalAmount,
+      targetAmount: data.targetAmount.present
+          ? data.targetAmount.value
+          : this.targetAmount,
       lastCalculationDate: data.lastCalculationDate.present
           ? data.lastCalculationDate.value
           : this.lastCalculationDate,
+      type: data.type.present ? data.type.value : this.type,
     );
   }
 
@@ -2275,14 +2492,16 @@ class Contribution extends DataClass implements Insertable<Contribution> {
           ..write('title: $title, ')
           ..write('percentage: $percentage, ')
           ..write('totalAmount: $totalAmount, ')
-          ..write('lastCalculationDate: $lastCalculationDate')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('lastCalculationDate: $lastCalculationDate, ')
+          ..write('type: $type')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, userId, title, percentage, totalAmount, lastCalculationDate);
+  int get hashCode => Object.hash(id, userId, title, percentage, totalAmount,
+      targetAmount, lastCalculationDate, type);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2292,7 +2511,9 @@ class Contribution extends DataClass implements Insertable<Contribution> {
           other.title == this.title &&
           other.percentage == this.percentage &&
           other.totalAmount == this.totalAmount &&
-          other.lastCalculationDate == this.lastCalculationDate);
+          other.targetAmount == this.targetAmount &&
+          other.lastCalculationDate == this.lastCalculationDate &&
+          other.type == this.type);
 }
 
 class ContributionsCompanion extends UpdateCompanion<Contribution> {
@@ -2301,14 +2522,18 @@ class ContributionsCompanion extends UpdateCompanion<Contribution> {
   final Value<String> title;
   final Value<double> percentage;
   final Value<double> totalAmount;
+  final Value<double> targetAmount;
   final Value<DateTime?> lastCalculationDate;
+  final Value<String?> type;
   const ContributionsCompanion({
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.title = const Value.absent(),
     this.percentage = const Value.absent(),
     this.totalAmount = const Value.absent(),
+    this.targetAmount = const Value.absent(),
     this.lastCalculationDate = const Value.absent(),
+    this.type = const Value.absent(),
   });
   ContributionsCompanion.insert({
     this.id = const Value.absent(),
@@ -2316,7 +2541,9 @@ class ContributionsCompanion extends UpdateCompanion<Contribution> {
     required String title,
     required double percentage,
     this.totalAmount = const Value.absent(),
+    this.targetAmount = const Value.absent(),
     this.lastCalculationDate = const Value.absent(),
+    this.type = const Value.absent(),
   })  : title = Value(title),
         percentage = Value(percentage);
   static Insertable<Contribution> custom({
@@ -2325,7 +2552,9 @@ class ContributionsCompanion extends UpdateCompanion<Contribution> {
     Expression<String>? title,
     Expression<double>? percentage,
     Expression<double>? totalAmount,
+    Expression<double>? targetAmount,
     Expression<DateTime>? lastCalculationDate,
+    Expression<String>? type,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2333,8 +2562,10 @@ class ContributionsCompanion extends UpdateCompanion<Contribution> {
       if (title != null) 'title': title,
       if (percentage != null) 'percentage': percentage,
       if (totalAmount != null) 'total_amount': totalAmount,
+      if (targetAmount != null) 'target_amount': targetAmount,
       if (lastCalculationDate != null)
         'last_calculation_date': lastCalculationDate,
+      if (type != null) 'type': type,
     });
   }
 
@@ -2344,14 +2575,18 @@ class ContributionsCompanion extends UpdateCompanion<Contribution> {
       Value<String>? title,
       Value<double>? percentage,
       Value<double>? totalAmount,
-      Value<DateTime?>? lastCalculationDate}) {
+      Value<double>? targetAmount,
+      Value<DateTime?>? lastCalculationDate,
+      Value<String?>? type}) {
     return ContributionsCompanion(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       title: title ?? this.title,
       percentage: percentage ?? this.percentage,
       totalAmount: totalAmount ?? this.totalAmount,
+      targetAmount: targetAmount ?? this.targetAmount,
       lastCalculationDate: lastCalculationDate ?? this.lastCalculationDate,
+      type: type ?? this.type,
     );
   }
 
@@ -2373,9 +2608,15 @@ class ContributionsCompanion extends UpdateCompanion<Contribution> {
     if (totalAmount.present) {
       map['total_amount'] = Variable<double>(totalAmount.value);
     }
+    if (targetAmount.present) {
+      map['target_amount'] = Variable<double>(targetAmount.value);
+    }
     if (lastCalculationDate.present) {
       map['last_calculation_date'] =
           Variable<DateTime>(lastCalculationDate.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
     }
     return map;
   }
@@ -2388,7 +2629,9 @@ class ContributionsCompanion extends UpdateCompanion<Contribution> {
           ..write('title: $title, ')
           ..write('percentage: $percentage, ')
           ..write('totalAmount: $totalAmount, ')
-          ..write('lastCalculationDate: $lastCalculationDate')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('lastCalculationDate: $lastCalculationDate, ')
+          ..write('type: $type')
           ..write(')'))
         .toString();
   }
@@ -2767,6 +3010,772 @@ class NotificationsCompanion extends UpdateCompanion<Notification> {
   }
 }
 
+class $ChallengesTable extends Challenges
+    with TableInfo<$ChallengesTable, Challenge> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ChallengesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetValueMeta =
+      const VerificationMeta('targetValue');
+  @override
+  late final GeneratedColumn<double> targetValue = GeneratedColumn<double>(
+      'target_value', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _durationDaysMeta =
+      const VerificationMeta('durationDays');
+  @override
+  late final GeneratedColumn<int> durationDays = GeneratedColumn<int>(
+      'duration_days', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _rewardPointsMeta =
+      const VerificationMeta('rewardPoints');
+  @override
+  late final GeneratedColumn<int> rewardPoints = GeneratedColumn<int>(
+      'reward_points', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, title, description, type, targetValue, durationDays, rewardPoints];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'challenges';
+  @override
+  VerificationContext validateIntegrity(Insertable<Challenge> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('target_value')) {
+      context.handle(
+          _targetValueMeta,
+          targetValue.isAcceptableOrUnknown(
+              data['target_value']!, _targetValueMeta));
+    } else if (isInserting) {
+      context.missing(_targetValueMeta);
+    }
+    if (data.containsKey('duration_days')) {
+      context.handle(
+          _durationDaysMeta,
+          durationDays.isAcceptableOrUnknown(
+              data['duration_days']!, _durationDaysMeta));
+    } else if (isInserting) {
+      context.missing(_durationDaysMeta);
+    }
+    if (data.containsKey('reward_points')) {
+      context.handle(
+          _rewardPointsMeta,
+          rewardPoints.isAcceptableOrUnknown(
+              data['reward_points']!, _rewardPointsMeta));
+    } else if (isInserting) {
+      context.missing(_rewardPointsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Challenge map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Challenge(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      targetValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}target_value'])!,
+      durationDays: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration_days'])!,
+      rewardPoints: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reward_points'])!,
+    );
+  }
+
+  @override
+  $ChallengesTable createAlias(String alias) {
+    return $ChallengesTable(attachedDatabase, alias);
+  }
+}
+
+class Challenge extends DataClass implements Insertable<Challenge> {
+  final int id;
+  final String title;
+  final String description;
+  final String type;
+  final double targetValue;
+  final int durationDays;
+  final int rewardPoints;
+  const Challenge(
+      {required this.id,
+      required this.title,
+      required this.description,
+      required this.type,
+      required this.targetValue,
+      required this.durationDays,
+      required this.rewardPoints});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['type'] = Variable<String>(type);
+    map['target_value'] = Variable<double>(targetValue);
+    map['duration_days'] = Variable<int>(durationDays);
+    map['reward_points'] = Variable<int>(rewardPoints);
+    return map;
+  }
+
+  ChallengesCompanion toCompanion(bool nullToAbsent) {
+    return ChallengesCompanion(
+      id: Value(id),
+      title: Value(title),
+      description: Value(description),
+      type: Value(type),
+      targetValue: Value(targetValue),
+      durationDays: Value(durationDays),
+      rewardPoints: Value(rewardPoints),
+    );
+  }
+
+  factory Challenge.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Challenge(
+      id: serializer.fromJson<int>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      type: serializer.fromJson<String>(json['type']),
+      targetValue: serializer.fromJson<double>(json['targetValue']),
+      durationDays: serializer.fromJson<int>(json['durationDays']),
+      rewardPoints: serializer.fromJson<int>(json['rewardPoints']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'type': serializer.toJson<String>(type),
+      'targetValue': serializer.toJson<double>(targetValue),
+      'durationDays': serializer.toJson<int>(durationDays),
+      'rewardPoints': serializer.toJson<int>(rewardPoints),
+    };
+  }
+
+  Challenge copyWith(
+          {int? id,
+          String? title,
+          String? description,
+          String? type,
+          double? targetValue,
+          int? durationDays,
+          int? rewardPoints}) =>
+      Challenge(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        type: type ?? this.type,
+        targetValue: targetValue ?? this.targetValue,
+        durationDays: durationDays ?? this.durationDays,
+        rewardPoints: rewardPoints ?? this.rewardPoints,
+      );
+  Challenge copyWithCompanion(ChallengesCompanion data) {
+    return Challenge(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      type: data.type.present ? data.type.value : this.type,
+      targetValue:
+          data.targetValue.present ? data.targetValue.value : this.targetValue,
+      durationDays: data.durationDays.present
+          ? data.durationDays.value
+          : this.durationDays,
+      rewardPoints: data.rewardPoints.present
+          ? data.rewardPoints.value
+          : this.rewardPoints,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Challenge(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('durationDays: $durationDays, ')
+          ..write('rewardPoints: $rewardPoints')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, title, description, type, targetValue, durationDays, rewardPoints);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Challenge &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.type == this.type &&
+          other.targetValue == this.targetValue &&
+          other.durationDays == this.durationDays &&
+          other.rewardPoints == this.rewardPoints);
+}
+
+class ChallengesCompanion extends UpdateCompanion<Challenge> {
+  final Value<int> id;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<String> type;
+  final Value<double> targetValue;
+  final Value<int> durationDays;
+  final Value<int> rewardPoints;
+  const ChallengesCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.type = const Value.absent(),
+    this.targetValue = const Value.absent(),
+    this.durationDays = const Value.absent(),
+    this.rewardPoints = const Value.absent(),
+  });
+  ChallengesCompanion.insert({
+    this.id = const Value.absent(),
+    required String title,
+    required String description,
+    required String type,
+    required double targetValue,
+    required int durationDays,
+    required int rewardPoints,
+  })  : title = Value(title),
+        description = Value(description),
+        type = Value(type),
+        targetValue = Value(targetValue),
+        durationDays = Value(durationDays),
+        rewardPoints = Value(rewardPoints);
+  static Insertable<Challenge> custom({
+    Expression<int>? id,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? type,
+    Expression<double>? targetValue,
+    Expression<int>? durationDays,
+    Expression<int>? rewardPoints,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (type != null) 'type': type,
+      if (targetValue != null) 'target_value': targetValue,
+      if (durationDays != null) 'duration_days': durationDays,
+      if (rewardPoints != null) 'reward_points': rewardPoints,
+    });
+  }
+
+  ChallengesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? title,
+      Value<String>? description,
+      Value<String>? type,
+      Value<double>? targetValue,
+      Value<int>? durationDays,
+      Value<int>? rewardPoints}) {
+    return ChallengesCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      targetValue: targetValue ?? this.targetValue,
+      durationDays: durationDays ?? this.durationDays,
+      rewardPoints: rewardPoints ?? this.rewardPoints,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (targetValue.present) {
+      map['target_value'] = Variable<double>(targetValue.value);
+    }
+    if (durationDays.present) {
+      map['duration_days'] = Variable<int>(durationDays.value);
+    }
+    if (rewardPoints.present) {
+      map['reward_points'] = Variable<int>(rewardPoints.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChallengesCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('durationDays: $durationDays, ')
+          ..write('rewardPoints: $rewardPoints')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserChallengesTable extends UserChallenges
+    with TableInfo<$UserChallengesTable, UserChallenge> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserChallengesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES users (id)'));
+  static const VerificationMeta _challengeIdMeta =
+      const VerificationMeta('challengeId');
+  @override
+  late final GeneratedColumn<int> challengeId = GeneratedColumn<int>(
+      'challenge_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES challenges (id)'));
+  static const VerificationMeta _progressMeta =
+      const VerificationMeta('progress');
+  @override
+  late final GeneratedColumn<double> progress = GeneratedColumn<double>(
+      'progress', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('active'));
+  static const VerificationMeta _startDateMeta =
+      const VerificationMeta('startDate');
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+      'start_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endDateMeta =
+      const VerificationMeta('endDate');
+  @override
+  late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
+      'end_date', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, userId, challengeId, progress, status, startDate, endDate];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_challenges';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserChallenge> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('challenge_id')) {
+      context.handle(
+          _challengeIdMeta,
+          challengeId.isAcceptableOrUnknown(
+              data['challenge_id']!, _challengeIdMeta));
+    } else if (isInserting) {
+      context.missing(_challengeIdMeta);
+    }
+    if (data.containsKey('progress')) {
+      context.handle(_progressMeta,
+          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(_startDateMeta,
+          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(_endDateMeta,
+          endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserChallenge map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserChallenge(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}user_id'])!,
+      challengeId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}challenge_id'])!,
+      progress: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}progress'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      startDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}start_date'])!,
+      endDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date']),
+    );
+  }
+
+  @override
+  $UserChallengesTable createAlias(String alias) {
+    return $UserChallengesTable(attachedDatabase, alias);
+  }
+}
+
+class UserChallenge extends DataClass implements Insertable<UserChallenge> {
+  final int id;
+  final int userId;
+  final int challengeId;
+  final double progress;
+  final String status;
+  final DateTime startDate;
+  final DateTime? endDate;
+  const UserChallenge(
+      {required this.id,
+      required this.userId,
+      required this.challengeId,
+      required this.progress,
+      required this.status,
+      required this.startDate,
+      this.endDate});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['user_id'] = Variable<int>(userId);
+    map['challenge_id'] = Variable<int>(challengeId);
+    map['progress'] = Variable<double>(progress);
+    map['status'] = Variable<String>(status);
+    map['start_date'] = Variable<DateTime>(startDate);
+    if (!nullToAbsent || endDate != null) {
+      map['end_date'] = Variable<DateTime>(endDate);
+    }
+    return map;
+  }
+
+  UserChallengesCompanion toCompanion(bool nullToAbsent) {
+    return UserChallengesCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      challengeId: Value(challengeId),
+      progress: Value(progress),
+      status: Value(status),
+      startDate: Value(startDate),
+      endDate: endDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDate),
+    );
+  }
+
+  factory UserChallenge.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserChallenge(
+      id: serializer.fromJson<int>(json['id']),
+      userId: serializer.fromJson<int>(json['userId']),
+      challengeId: serializer.fromJson<int>(json['challengeId']),
+      progress: serializer.fromJson<double>(json['progress']),
+      status: serializer.fromJson<String>(json['status']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      endDate: serializer.fromJson<DateTime?>(json['endDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'userId': serializer.toJson<int>(userId),
+      'challengeId': serializer.toJson<int>(challengeId),
+      'progress': serializer.toJson<double>(progress),
+      'status': serializer.toJson<String>(status),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'endDate': serializer.toJson<DateTime?>(endDate),
+    };
+  }
+
+  UserChallenge copyWith(
+          {int? id,
+          int? userId,
+          int? challengeId,
+          double? progress,
+          String? status,
+          DateTime? startDate,
+          Value<DateTime?> endDate = const Value.absent()}) =>
+      UserChallenge(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        challengeId: challengeId ?? this.challengeId,
+        progress: progress ?? this.progress,
+        status: status ?? this.status,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate.present ? endDate.value : this.endDate,
+      );
+  UserChallenge copyWithCompanion(UserChallengesCompanion data) {
+    return UserChallenge(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      challengeId:
+          data.challengeId.present ? data.challengeId.value : this.challengeId,
+      progress: data.progress.present ? data.progress.value : this.progress,
+      status: data.status.present ? data.status.value : this.status,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserChallenge(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('challengeId: $challengeId, ')
+          ..write('progress: $progress, ')
+          ..write('status: $status, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, userId, challengeId, progress, status, startDate, endDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserChallenge &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.challengeId == this.challengeId &&
+          other.progress == this.progress &&
+          other.status == this.status &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate);
+}
+
+class UserChallengesCompanion extends UpdateCompanion<UserChallenge> {
+  final Value<int> id;
+  final Value<int> userId;
+  final Value<int> challengeId;
+  final Value<double> progress;
+  final Value<String> status;
+  final Value<DateTime> startDate;
+  final Value<DateTime?> endDate;
+  const UserChallengesCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.challengeId = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.status = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+  });
+  UserChallengesCompanion.insert({
+    this.id = const Value.absent(),
+    required int userId,
+    required int challengeId,
+    this.progress = const Value.absent(),
+    this.status = const Value.absent(),
+    required DateTime startDate,
+    this.endDate = const Value.absent(),
+  })  : userId = Value(userId),
+        challengeId = Value(challengeId),
+        startDate = Value(startDate);
+  static Insertable<UserChallenge> custom({
+    Expression<int>? id,
+    Expression<int>? userId,
+    Expression<int>? challengeId,
+    Expression<double>? progress,
+    Expression<String>? status,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? endDate,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (challengeId != null) 'challenge_id': challengeId,
+      if (progress != null) 'progress': progress,
+      if (status != null) 'status': status,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+    });
+  }
+
+  UserChallengesCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? userId,
+      Value<int>? challengeId,
+      Value<double>? progress,
+      Value<String>? status,
+      Value<DateTime>? startDate,
+      Value<DateTime?>? endDate}) {
+    return UserChallengesCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      challengeId: challengeId ?? this.challengeId,
+      progress: progress ?? this.progress,
+      status: status ?? this.status,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<int>(userId.value);
+    }
+    if (challengeId.present) {
+      map['challenge_id'] = Variable<int>(challengeId.value);
+    }
+    if (progress.present) {
+      map['progress'] = Variable<double>(progress.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<DateTime>(endDate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserChallengesCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('challengeId: $challengeId, ')
+          ..write('progress: $progress, ')
+          ..write('status: $status, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2777,12 +3786,23 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GoalsTable goals = $GoalsTable(this);
   late final $ContributionsTable contributions = $ContributionsTable(this);
   late final $NotificationsTable notifications = $NotificationsTable(this);
+  late final $ChallengesTable challenges = $ChallengesTable(this);
+  late final $UserChallengesTable userChallenges = $UserChallengesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [users, expenses, incomes, budgets, goals, contributions, notifications];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        users,
+        expenses,
+        incomes,
+        budgets,
+        goals,
+        contributions,
+        notifications,
+        challenges,
+        userChallenges
+      ];
 }
 
 typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
@@ -2792,6 +3812,10 @@ typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
   Value<String?> name,
   Value<String?> profileImage,
   required DateTime createdAt,
+  Value<double> financialScore,
+  Value<String> level,
+  Value<int> points,
+  Value<double> savingPercentage,
 });
 typedef $$UsersTableUpdateCompanionBuilder = UsersCompanion Function({
   Value<int> id,
@@ -2800,6 +3824,10 @@ typedef $$UsersTableUpdateCompanionBuilder = UsersCompanion Function({
   Value<String?> name,
   Value<String?> profileImage,
   Value<DateTime> createdAt,
+  Value<double> financialScore,
+  Value<String> level,
+  Value<int> points,
+  Value<double> savingPercentage,
 });
 
 final class $$UsersTableReferences
@@ -2891,6 +3919,21 @@ final class $$UsersTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$UserChallengesTable, List<UserChallenge>>
+      _userChallengesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.userChallenges,
+              aliasName:
+                  $_aliasNameGenerator(db.users.id, db.userChallenges.userId));
+
+  $$UserChallengesTableProcessedTableManager get userChallengesRefs {
+    final manager = $$UserChallengesTableTableManager($_db, $_db.userChallenges)
+        .filter((f) => f.userId.id($_item.id));
+
+    final cache = $_typedResult.readTableOrNull(_userChallengesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
@@ -2918,6 +3961,20 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get financialScore => $composableBuilder(
+      column: $table.financialScore,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get level => $composableBuilder(
+      column: $table.level, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get points => $composableBuilder(
+      column: $table.points, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get savingPercentage => $composableBuilder(
+      column: $table.savingPercentage,
+      builder: (column) => ColumnFilters(column));
 
   Expression<bool> expensesRefs(
       Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
@@ -3044,6 +4101,27 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
             ));
     return f(composer);
   }
+
+  Expression<bool> userChallengesRefs(
+      Expression<bool> Function($$UserChallengesTableFilterComposer f) f) {
+    final $$UserChallengesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userChallenges,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserChallengesTableFilterComposer(
+              $db: $db,
+              $table: $db.userChallenges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$UsersTableOrderingComposer
@@ -3073,6 +4151,20 @@ class $$UsersTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get financialScore => $composableBuilder(
+      column: $table.financialScore,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get level => $composableBuilder(
+      column: $table.level, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get points => $composableBuilder(
+      column: $table.points, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get savingPercentage => $composableBuilder(
+      column: $table.savingPercentage,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$UsersTableAnnotationComposer
@@ -3101,6 +4193,18 @@ class $$UsersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<double> get financialScore => $composableBuilder(
+      column: $table.financialScore, builder: (column) => column);
+
+  GeneratedColumn<String> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<int> get points =>
+      $composableBuilder(column: $table.points, builder: (column) => column);
+
+  GeneratedColumn<double> get savingPercentage => $composableBuilder(
+      column: $table.savingPercentage, builder: (column) => column);
 
   Expression<T> expensesRefs<T extends Object>(
       Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
@@ -3227,6 +4331,27 @@ class $$UsersTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> userChallengesRefs<T extends Object>(
+      Expression<T> Function($$UserChallengesTableAnnotationComposer a) f) {
+    final $$UserChallengesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userChallenges,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserChallengesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.userChallenges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$UsersTableTableManager extends RootTableManager<
@@ -3246,7 +4371,8 @@ class $$UsersTableTableManager extends RootTableManager<
         bool budgetsRefs,
         bool goalsRefs,
         bool contributionsRefs,
-        bool notificationsRefs})> {
+        bool notificationsRefs,
+        bool userChallengesRefs})> {
   $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
       : super(TableManagerState(
           db: db,
@@ -3264,6 +4390,10 @@ class $$UsersTableTableManager extends RootTableManager<
             Value<String?> name = const Value.absent(),
             Value<String?> profileImage = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<double> financialScore = const Value.absent(),
+            Value<String> level = const Value.absent(),
+            Value<int> points = const Value.absent(),
+            Value<double> savingPercentage = const Value.absent(),
           }) =>
               UsersCompanion(
             id: id,
@@ -3272,6 +4402,10 @@ class $$UsersTableTableManager extends RootTableManager<
             name: name,
             profileImage: profileImage,
             createdAt: createdAt,
+            financialScore: financialScore,
+            level: level,
+            points: points,
+            savingPercentage: savingPercentage,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -3280,6 +4414,10 @@ class $$UsersTableTableManager extends RootTableManager<
             Value<String?> name = const Value.absent(),
             Value<String?> profileImage = const Value.absent(),
             required DateTime createdAt,
+            Value<double> financialScore = const Value.absent(),
+            Value<String> level = const Value.absent(),
+            Value<int> points = const Value.absent(),
+            Value<double> savingPercentage = const Value.absent(),
           }) =>
               UsersCompanion.insert(
             id: id,
@@ -3288,6 +4426,10 @@ class $$UsersTableTableManager extends RootTableManager<
             name: name,
             profileImage: profileImage,
             createdAt: createdAt,
+            financialScore: financialScore,
+            level: level,
+            points: points,
+            savingPercentage: savingPercentage,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
@@ -3299,7 +4441,8 @@ class $$UsersTableTableManager extends RootTableManager<
               budgetsRefs = false,
               goalsRefs = false,
               contributionsRefs = false,
-              notificationsRefs = false}) {
+              notificationsRefs = false,
+              userChallengesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -3308,7 +4451,8 @@ class $$UsersTableTableManager extends RootTableManager<
                 if (budgetsRefs) db.budgets,
                 if (goalsRefs) db.goals,
                 if (contributionsRefs) db.contributions,
-                if (notificationsRefs) db.notifications
+                if (notificationsRefs) db.notifications,
+                if (userChallengesRefs) db.userChallenges
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -3380,6 +4524,18 @@ class $$UsersTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem: (item,
                                 referencedItems) =>
                             referencedItems.where((e) => e.userId == item.id),
+                        typedResults: items),
+                  if (userChallengesRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable:
+                            $$UsersTableReferences._userChallengesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$UsersTableReferences(db, table, p0)
+                                .userChallengesRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.userId == item.id),
                         typedResults: items)
                 ];
               },
@@ -3405,7 +4561,8 @@ typedef $$UsersTableProcessedTableManager = ProcessedTableManager<
         bool budgetsRefs,
         bool goalsRefs,
         bool contributionsRefs,
-        bool notificationsRefs})>;
+        bool notificationsRefs,
+        bool userChallengesRefs})>;
 typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
   Value<int> id,
   Value<String?> remoteId,
@@ -4643,7 +5800,9 @@ typedef $$ContributionsTableCreateCompanionBuilder = ContributionsCompanion
   required String title,
   required double percentage,
   Value<double> totalAmount,
+  Value<double> targetAmount,
   Value<DateTime?> lastCalculationDate,
+  Value<String?> type,
 });
 typedef $$ContributionsTableUpdateCompanionBuilder = ContributionsCompanion
     Function({
@@ -4652,7 +5811,9 @@ typedef $$ContributionsTableUpdateCompanionBuilder = ContributionsCompanion
   Value<String> title,
   Value<double> percentage,
   Value<double> totalAmount,
+  Value<double> targetAmount,
   Value<DateTime?> lastCalculationDate,
+  Value<String?> type,
 });
 
 final class $$ContributionsTableReferences
@@ -4695,9 +5856,15 @@ class $$ContributionsTableFilterComposer
   ColumnFilters<double> get totalAmount => $composableBuilder(
       column: $table.totalAmount, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<double> get targetAmount => $composableBuilder(
+      column: $table.targetAmount, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<DateTime> get lastCalculationDate => $composableBuilder(
       column: $table.lastCalculationDate,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
 
   $$UsersTableFilterComposer get userId {
     final $$UsersTableFilterComposer composer = $composerBuilder(
@@ -4741,9 +5908,16 @@ class $$ContributionsTableOrderingComposer
   ColumnOrderings<double> get totalAmount => $composableBuilder(
       column: $table.totalAmount, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get targetAmount => $composableBuilder(
+      column: $table.targetAmount,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastCalculationDate => $composableBuilder(
       column: $table.lastCalculationDate,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
 
   $$UsersTableOrderingComposer get userId {
     final $$UsersTableOrderingComposer composer = $composerBuilder(
@@ -4787,8 +5961,14 @@ class $$ContributionsTableAnnotationComposer
   GeneratedColumn<double> get totalAmount => $composableBuilder(
       column: $table.totalAmount, builder: (column) => column);
 
+  GeneratedColumn<double> get targetAmount => $composableBuilder(
+      column: $table.targetAmount, builder: (column) => column);
+
   GeneratedColumn<DateTime> get lastCalculationDate => $composableBuilder(
       column: $table.lastCalculationDate, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
 
   $$UsersTableAnnotationComposer get userId {
     final $$UsersTableAnnotationComposer composer = $composerBuilder(
@@ -4839,7 +6019,9 @@ class $$ContributionsTableTableManager extends RootTableManager<
             Value<String> title = const Value.absent(),
             Value<double> percentage = const Value.absent(),
             Value<double> totalAmount = const Value.absent(),
+            Value<double> targetAmount = const Value.absent(),
             Value<DateTime?> lastCalculationDate = const Value.absent(),
+            Value<String?> type = const Value.absent(),
           }) =>
               ContributionsCompanion(
             id: id,
@@ -4847,7 +6029,9 @@ class $$ContributionsTableTableManager extends RootTableManager<
             title: title,
             percentage: percentage,
             totalAmount: totalAmount,
+            targetAmount: targetAmount,
             lastCalculationDate: lastCalculationDate,
+            type: type,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -4855,7 +6039,9 @@ class $$ContributionsTableTableManager extends RootTableManager<
             required String title,
             required double percentage,
             Value<double> totalAmount = const Value.absent(),
+            Value<double> targetAmount = const Value.absent(),
             Value<DateTime?> lastCalculationDate = const Value.absent(),
+            Value<String?> type = const Value.absent(),
           }) =>
               ContributionsCompanion.insert(
             id: id,
@@ -4863,7 +6049,9 @@ class $$ContributionsTableTableManager extends RootTableManager<
             title: title,
             percentage: percentage,
             totalAmount: totalAmount,
+            targetAmount: targetAmount,
             lastCalculationDate: lastCalculationDate,
+            type: type,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -5219,6 +6407,661 @@ typedef $$NotificationsTableProcessedTableManager = ProcessedTableManager<
     (Notification, $$NotificationsTableReferences),
     Notification,
     PrefetchHooks Function({bool userId})>;
+typedef $$ChallengesTableCreateCompanionBuilder = ChallengesCompanion Function({
+  Value<int> id,
+  required String title,
+  required String description,
+  required String type,
+  required double targetValue,
+  required int durationDays,
+  required int rewardPoints,
+});
+typedef $$ChallengesTableUpdateCompanionBuilder = ChallengesCompanion Function({
+  Value<int> id,
+  Value<String> title,
+  Value<String> description,
+  Value<String> type,
+  Value<double> targetValue,
+  Value<int> durationDays,
+  Value<int> rewardPoints,
+});
+
+final class $$ChallengesTableReferences
+    extends BaseReferences<_$AppDatabase, $ChallengesTable, Challenge> {
+  $$ChallengesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$UserChallengesTable, List<UserChallenge>>
+      _userChallengesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.userChallenges,
+              aliasName: $_aliasNameGenerator(
+                  db.challenges.id, db.userChallenges.challengeId));
+
+  $$UserChallengesTableProcessedTableManager get userChallengesRefs {
+    final manager = $$UserChallengesTableTableManager($_db, $_db.userChallenges)
+        .filter((f) => f.challengeId.id($_item.id));
+
+    final cache = $_typedResult.readTableOrNull(_userChallengesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$ChallengesTableFilterComposer
+    extends Composer<_$AppDatabase, $ChallengesTable> {
+  $$ChallengesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get targetValue => $composableBuilder(
+      column: $table.targetValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get durationDays => $composableBuilder(
+      column: $table.durationDays, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get rewardPoints => $composableBuilder(
+      column: $table.rewardPoints, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> userChallengesRefs(
+      Expression<bool> Function($$UserChallengesTableFilterComposer f) f) {
+    final $$UserChallengesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userChallenges,
+        getReferencedColumn: (t) => t.challengeId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserChallengesTableFilterComposer(
+              $db: $db,
+              $table: $db.userChallenges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$ChallengesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ChallengesTable> {
+  $$ChallengesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get targetValue => $composableBuilder(
+      column: $table.targetValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get durationDays => $composableBuilder(
+      column: $table.durationDays,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get rewardPoints => $composableBuilder(
+      column: $table.rewardPoints,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$ChallengesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ChallengesTable> {
+  $$ChallengesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<double> get targetValue => $composableBuilder(
+      column: $table.targetValue, builder: (column) => column);
+
+  GeneratedColumn<int> get durationDays => $composableBuilder(
+      column: $table.durationDays, builder: (column) => column);
+
+  GeneratedColumn<int> get rewardPoints => $composableBuilder(
+      column: $table.rewardPoints, builder: (column) => column);
+
+  Expression<T> userChallengesRefs<T extends Object>(
+      Expression<T> Function($$UserChallengesTableAnnotationComposer a) f) {
+    final $$UserChallengesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.userChallenges,
+        getReferencedColumn: (t) => t.challengeId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UserChallengesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.userChallenges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$ChallengesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ChallengesTable,
+    Challenge,
+    $$ChallengesTableFilterComposer,
+    $$ChallengesTableOrderingComposer,
+    $$ChallengesTableAnnotationComposer,
+    $$ChallengesTableCreateCompanionBuilder,
+    $$ChallengesTableUpdateCompanionBuilder,
+    (Challenge, $$ChallengesTableReferences),
+    Challenge,
+    PrefetchHooks Function({bool userChallengesRefs})> {
+  $$ChallengesTableTableManager(_$AppDatabase db, $ChallengesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ChallengesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ChallengesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ChallengesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<double> targetValue = const Value.absent(),
+            Value<int> durationDays = const Value.absent(),
+            Value<int> rewardPoints = const Value.absent(),
+          }) =>
+              ChallengesCompanion(
+            id: id,
+            title: title,
+            description: description,
+            type: type,
+            targetValue: targetValue,
+            durationDays: durationDays,
+            rewardPoints: rewardPoints,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String title,
+            required String description,
+            required String type,
+            required double targetValue,
+            required int durationDays,
+            required int rewardPoints,
+          }) =>
+              ChallengesCompanion.insert(
+            id: id,
+            title: title,
+            description: description,
+            type: type,
+            targetValue: targetValue,
+            durationDays: durationDays,
+            rewardPoints: rewardPoints,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ChallengesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({userChallengesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (userChallengesRefs) db.userChallenges
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (userChallengesRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ChallengesTableReferences
+                            ._userChallengesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ChallengesTableReferences(db, table, p0)
+                                .userChallengesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.challengeId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ChallengesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ChallengesTable,
+    Challenge,
+    $$ChallengesTableFilterComposer,
+    $$ChallengesTableOrderingComposer,
+    $$ChallengesTableAnnotationComposer,
+    $$ChallengesTableCreateCompanionBuilder,
+    $$ChallengesTableUpdateCompanionBuilder,
+    (Challenge, $$ChallengesTableReferences),
+    Challenge,
+    PrefetchHooks Function({bool userChallengesRefs})>;
+typedef $$UserChallengesTableCreateCompanionBuilder = UserChallengesCompanion
+    Function({
+  Value<int> id,
+  required int userId,
+  required int challengeId,
+  Value<double> progress,
+  Value<String> status,
+  required DateTime startDate,
+  Value<DateTime?> endDate,
+});
+typedef $$UserChallengesTableUpdateCompanionBuilder = UserChallengesCompanion
+    Function({
+  Value<int> id,
+  Value<int> userId,
+  Value<int> challengeId,
+  Value<double> progress,
+  Value<String> status,
+  Value<DateTime> startDate,
+  Value<DateTime?> endDate,
+});
+
+final class $$UserChallengesTableReferences
+    extends BaseReferences<_$AppDatabase, $UserChallengesTable, UserChallenge> {
+  $$UserChallengesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $UsersTable _userIdTable(_$AppDatabase db) => db.users
+      .createAlias($_aliasNameGenerator(db.userChallenges.userId, db.users.id));
+
+  $$UsersTableProcessedTableManager? get userId {
+    if ($_item.userId == null) return null;
+    final manager = $$UsersTableTableManager($_db, $_db.users)
+        .filter((f) => f.id($_item.userId!));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ChallengesTable _challengeIdTable(_$AppDatabase db) =>
+      db.challenges.createAlias($_aliasNameGenerator(
+          db.userChallenges.challengeId, db.challenges.id));
+
+  $$ChallengesTableProcessedTableManager? get challengeId {
+    if ($_item.challengeId == null) return null;
+    final manager = $$ChallengesTableTableManager($_db, $_db.challenges)
+        .filter((f) => f.id($_item.challengeId!));
+    final item = $_typedResult.readTableOrNull(_challengeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$UserChallengesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserChallengesTable> {
+  $$UserChallengesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnFilters(column));
+
+  $$UsersTableFilterComposer get userId {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.users,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UsersTableFilterComposer(
+              $db: $db,
+              $table: $db.users,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ChallengesTableFilterComposer get challengeId {
+    final $$ChallengesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.challengeId,
+        referencedTable: $db.challenges,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChallengesTableFilterComposer(
+              $db: $db,
+              $table: $db.challenges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$UserChallengesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserChallengesTable> {
+  $$UserChallengesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnOrderings(column));
+
+  $$UsersTableOrderingComposer get userId {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.users,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UsersTableOrderingComposer(
+              $db: $db,
+              $table: $db.users,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ChallengesTableOrderingComposer get challengeId {
+    final $$ChallengesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.challengeId,
+        referencedTable: $db.challenges,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChallengesTableOrderingComposer(
+              $db: $db,
+              $table: $db.challenges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$UserChallengesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserChallengesTable> {
+  $$UserChallengesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get progress =>
+      $composableBuilder(column: $table.progress, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  $$UsersTableAnnotationComposer get userId {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.users,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$UsersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.users,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ChallengesTableAnnotationComposer get challengeId {
+    final $$ChallengesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.challengeId,
+        referencedTable: $db.challenges,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ChallengesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.challenges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$UserChallengesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $UserChallengesTable,
+    UserChallenge,
+    $$UserChallengesTableFilterComposer,
+    $$UserChallengesTableOrderingComposer,
+    $$UserChallengesTableAnnotationComposer,
+    $$UserChallengesTableCreateCompanionBuilder,
+    $$UserChallengesTableUpdateCompanionBuilder,
+    (UserChallenge, $$UserChallengesTableReferences),
+    UserChallenge,
+    PrefetchHooks Function({bool userId, bool challengeId})> {
+  $$UserChallengesTableTableManager(
+      _$AppDatabase db, $UserChallengesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserChallengesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserChallengesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserChallengesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> userId = const Value.absent(),
+            Value<int> challengeId = const Value.absent(),
+            Value<double> progress = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<DateTime> startDate = const Value.absent(),
+            Value<DateTime?> endDate = const Value.absent(),
+          }) =>
+              UserChallengesCompanion(
+            id: id,
+            userId: userId,
+            challengeId: challengeId,
+            progress: progress,
+            status: status,
+            startDate: startDate,
+            endDate: endDate,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int userId,
+            required int challengeId,
+            Value<double> progress = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            required DateTime startDate,
+            Value<DateTime?> endDate = const Value.absent(),
+          }) =>
+              UserChallengesCompanion.insert(
+            id: id,
+            userId: userId,
+            challengeId: challengeId,
+            progress: progress,
+            status: status,
+            startDate: startDate,
+            endDate: endDate,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$UserChallengesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({userId = false, challengeId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (userId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.userId,
+                    referencedTable:
+                        $$UserChallengesTableReferences._userIdTable(db),
+                    referencedColumn:
+                        $$UserChallengesTableReferences._userIdTable(db).id,
+                  ) as T;
+                }
+                if (challengeId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.challengeId,
+                    referencedTable:
+                        $$UserChallengesTableReferences._challengeIdTable(db),
+                    referencedColumn: $$UserChallengesTableReferences
+                        ._challengeIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$UserChallengesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $UserChallengesTable,
+    UserChallenge,
+    $$UserChallengesTableFilterComposer,
+    $$UserChallengesTableOrderingComposer,
+    $$UserChallengesTableAnnotationComposer,
+    $$UserChallengesTableCreateCompanionBuilder,
+    $$UserChallengesTableUpdateCompanionBuilder,
+    (UserChallenge, $$UserChallengesTableReferences),
+    UserChallenge,
+    PrefetchHooks Function({bool userId, bool challengeId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5237,4 +7080,8 @@ class $AppDatabaseManager {
       $$ContributionsTableTableManager(_db, _db.contributions);
   $$NotificationsTableTableManager get notifications =>
       $$NotificationsTableTableManager(_db, _db.notifications);
+  $$ChallengesTableTableManager get challenges =>
+      $$ChallengesTableTableManager(_db, _db.challenges);
+  $$UserChallengesTableTableManager get userChallenges =>
+      $$UserChallengesTableTableManager(_db, _db.userChallenges);
 }
