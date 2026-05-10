@@ -61,7 +61,9 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
                   ref.invalidate(dashboardExpensesProvider);
                   ref.invalidate(categoryExpensesProvider);
                   ref.invalidate(monthlyTrendsProvider);
-                  if (mounted) context.pop();
+                  if (mounted) {
+                    if (context.mounted) context.pop();
+                  }
                 } catch (e) {
                   _handleError(e);
                 } finally {
@@ -96,7 +98,7 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
                 },
               ),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 items: ['Alimentation', 'Transport', 'Loisirs', 'Santé', 'Autre']
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -128,7 +130,9 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
                       ref.invalidate(dashboardExpensesProvider);
                       ref.invalidate(categoryExpensesProvider);
                       ref.invalidate(monthlyTrendsProvider);
-                      if (mounted) context.pop();
+                      if (mounted) {
+                        if (context.mounted) context.pop();
+                      }
                     } catch (e) {
                       _handleError(e);
                     } finally {

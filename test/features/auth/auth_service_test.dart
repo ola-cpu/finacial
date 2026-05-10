@@ -1,10 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:finance_app/features/auth/data/auth_service.dart';
 import 'package:finance_app/core/database/app_database.dart';
-import 'package:drift/native.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
-
 void main() {
   late AppDatabase db;
   late AuthService service;
@@ -20,10 +16,6 @@ void main() {
 
   group('AuthService', () {
     test('Password hashing should be consistent', () {
-      final password = 'password123';
-      final bytes = utf8.encode(password);
-      final expectedHash = sha256.convert(bytes).toString();
-
       // We can't access private method _hashPassword directly in test without making it visible or testing through public methods
     });
 

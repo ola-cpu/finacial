@@ -60,7 +60,9 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                   await ref.read(incomeServiceProvider).deleteIncome(widget.income!['id']);
                   ref.invalidate(dashboardIncomesProvider);
                   ref.invalidate(monthlyTrendsProvider);
-                  if (mounted) context.pop();
+                  if (mounted) {
+                    if (context.mounted) context.pop();
+                  }
                 } catch (e) {
                   _handleError(e);
                 } finally {
@@ -95,7 +97,7 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                 },
               ),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 items: ['Salaire', 'Business', 'Cadeau', 'Autre']
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -126,7 +128,9 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                       }
                       ref.invalidate(dashboardIncomesProvider);
                       ref.invalidate(monthlyTrendsProvider);
-                      if (mounted) context.pop();
+                      if (mounted) {
+                        if (context.mounted) context.pop();
+                      }
                     } catch (e) {
                       _handleError(e);
                     } finally {
