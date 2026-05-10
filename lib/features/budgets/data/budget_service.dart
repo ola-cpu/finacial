@@ -1,38 +1,71 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:drift/drift.dart';
 import '../../../core/providers/supabase_provider.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/services/sync_service.dart';
 
 class BudgetService {
   final SupabaseClient supabase;
+  final AppDatabase database;
+  final SyncService syncService;
 
-  BudgetService(this.supabase);
+  BudgetService(this.supabase, this.database, this.syncService);
 
   Future<void> addBudget({
     required String category,
     required double monthlyLimit,
   }) async {
-    final user = supabase.auth.currentUser;
-    if (user == null) throw Exception("User not authenticated");
+    await database.into(database.budgets).insert(
+          BudgetsCompanion.insert(
+            category: category,
+            monthlyLimit: monthlyLimit,
+            syncStatus: const Value(1),
+          ),
+        );
 
-    await supabase.from('budgets').insert({
-      'user_id': user.id,
-      'category': category,
-      'monthly_limit': monthlyLimit,
-    });
+    _triggerSync();
+  }
+
+  Future<void> updateBudget({
+    required int id,
+    required double monthlyLimit,
+  }) async {
+    final existing = await (database.select(database.budgets)..where((t) => t.id.equals(id))).getSingle();
+
+    await (database.update(database.budgets)..where((t) => t.id.equals(id))).write(
+      BudgetsCompanion(
+        monthlyLimit: Value(monthlyLimit),
+        syncStatus: Value(existing.remoteId == null ? 1 : 2),
+      ),
+    );
+
+    _triggerSync();
   }
 
   Future<List<Map<String, dynamic>>> getBudgets() async {
-    final user = supabase.auth.currentUser;
-    if (user == null) return [];
+    final budgets = await (database.select(database.budgets)
+          ..where((t) => t.syncStatus.isSmallerThanValue(3)))
+        .get();
 
-    return await supabase
-        .from('budgets')
-        .select()
-        .eq('user_id', user.id);
+    return budgets.map((e) => {
+      'id': e.id,
+      'remote_id': e.remoteId,
+      'category': e.category,
+      'monthly_limit': e.monthlyLimit,
+    }).toList();
+  }
+
+  void _triggerSync() {
+    if (supabase.auth.currentUser != null) {
+      syncService.pushChanges();
+    }
   }
 }
 
 final budgetServiceProvider = Provider((ref) {
   final supabase = ref.watch(supabaseProvider);
-  return BudgetService(supabase);
+  final database = ref.watch(databaseProvider);
+  final syncService = ref.watch(syncServiceProvider);
+  return BudgetService(supabase, database, syncService);
 });

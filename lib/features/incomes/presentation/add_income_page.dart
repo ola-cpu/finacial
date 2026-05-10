@@ -54,7 +54,7 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
               onPressed: () async {
                 setState(() => _isLoading = true);
                 try {
-                  await ref.read(incomeServiceProvider).deleteIncome(widget.income!['key']);
+                  await ref.read(incomeServiceProvider).deleteIncome(widget.income!['id']);
                   if (mounted) context.pop();
                 } catch (e) {
                   _handleError(e);
@@ -105,7 +105,7 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                     try {
                       if (isEditing) {
                         await ref.read(incomeServiceProvider).updateIncome(
-                              key: widget.income!['key'],
+                              id: widget.income!['id'],
                               title: _titleController.text,
                               amount: double.parse(_amountController.text),
                               category: _category,
