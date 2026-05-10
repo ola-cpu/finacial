@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../auth/providers/auth_providers.dart';
 import '../providers/dashboard_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -30,15 +29,6 @@ class DashboardPage extends ConsumerWidget {
             icon: const Icon(Icons.analytics),
             onPressed: () => context.push('/analytics'),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await ref.read(authControllerProvider.notifier).signOut();
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
-          )
         ],
       ),
       body: Padding(
