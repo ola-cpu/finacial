@@ -1,5 +1,4 @@
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart';
 
 class PdfExportService {
   Future<pw.Document> generateReport({

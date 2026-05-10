@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/goal_service.dart';
 
 class GoalsPage extends ConsumerWidget {
   const GoalsPage({super.key});
