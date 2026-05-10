@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/widgets/app_button.dart';
 import '../data/income_service.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../statistics/providers/statistics_providers.dart';
@@ -101,8 +102,10 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                 onChanged: (value) => setState(() => _category = value!),
                 decoration: const InputDecoration(labelText: 'Catégorie'),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
+              const SizedBox(height: 32),
+              AppButton(
+                text: isEditing ? 'Mettre à jour' : 'Enregistrer',
+                isLoading: _isLoading,
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     setState(() => _isLoading = true);
@@ -131,7 +134,6 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                     }
                   }
                 },
-                child: Text(isEditing ? 'Mettre à jour' : 'Enregistrer'),
               )
             ],
           ),

@@ -99,18 +99,22 @@ class DashboardPage extends ConsumerWidget {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton(
+          FloatingActionButton.extended(
+            key: const Key('add_income_fab'),
             heroTag: 'income',
             onPressed: () => context.push('/add-income'),
             backgroundColor: const Color(0xFF50C878),
-            child: const Icon(Icons.add),
+            label: const Text('Revenu', style: TextStyle(fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.add),
           ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            key: const Key('add_expense_fab'),
             heroTag: 'expense',
             onPressed: () => context.push('/add-expense'),
             backgroundColor: Colors.redAccent,
-            child: const Icon(Icons.remove),
+            label: const Text('Dépense', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            icon: const Icon(Icons.remove, color: Colors.white),
           ),
         ],
       ),

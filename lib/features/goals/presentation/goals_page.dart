@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/app_button.dart';
 import '../data/goal_service.dart';
 import '../providers/goals_providers.dart';
 import 'package:intl/intl.dart';
@@ -94,34 +95,49 @@ class GoalsPage extends ConsumerWidget {
               ),
             ],
           ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-            ElevatedButton(
-              onPressed: () async {
-                final service = ref.read(goalServiceProvider);
-                final amount = double.tryParse(amountController.text);
-                if (amount == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide')));
-                  return;
-                }
-                if (goal == null) {
-                  await service.addGoal(
-                    title: titleController.text,
-                    targetAmount: amount,
-                    deadline: selectedDate,
-                  );
-                } else {
-                  await service.updateGoal(
-                    id: goal['id'],
-                    title: titleController.text,
-                    targetAmount: amount,
-                    deadline: selectedDate,
-                  );
-                }
-                ref.invalidate(goalsListProvider);
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: const Text('Enregistrer'),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    text: 'Annuler',
+                    variant: AppButtonVariant.outline,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    text: 'Enregistrer',
+                    onPressed: () async {
+                      final service = ref.read(goalServiceProvider);
+                      final amount = double.tryParse(amountController.text);
+                      if (amount == null) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide')));
+                        return;
+                      }
+                      if (goal == null) {
+                        await service.addGoal(
+                          title: titleController.text,
+                          targetAmount: amount,
+                          deadline: selectedDate,
+                        );
+                      } else {
+                        await service.updateGoal(
+                          id: goal['id'],
+                          title: titleController.text,
+                          targetAmount: amount,
+                          deadline: selectedDate,
+                        );
+                      }
+                      ref.invalidate(goalsListProvider);
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),

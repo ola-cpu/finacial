@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/app_button.dart';
 import '../data/budget_service.dart';
 import '../providers/budgets_providers.dart';
 
@@ -70,31 +71,46 @@ class BudgetsPage extends ConsumerWidget {
             ),
           ],
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-          ElevatedButton(
-            onPressed: () async {
-              final service = ref.read(budgetServiceProvider);
-              final limit = double.tryParse(limitController.text);
-              if (limit == null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide')));
-                return;
-              }
-              if (budget == null) {
-                await service.addBudget(
-                  category: categoryController.text,
-                  monthlyLimit: limit,
-                );
-              } else {
-                await service.updateBudget(
-                  id: budget['id'],
-                  monthlyLimit: limit,
-                );
-              }
-              ref.invalidate(budgetsListProvider);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Enregistrer'),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: 'Annuler',
+                  variant: AppButtonVariant.outline,
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppButton(
+                  text: 'Enregistrer',
+                  onPressed: () async {
+                    final service = ref.read(budgetServiceProvider);
+                    final limit = double.tryParse(limitController.text);
+                    if (limit == null) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide')));
+                      return;
+                    }
+                    if (budget == null) {
+                      await service.addBudget(
+                        category: categoryController.text,
+                        monthlyLimit: limit,
+                      );
+                    } else {
+                      await service.updateBudget(
+                        id: budget['id'],
+                        monthlyLimit: limit,
+                      );
+                    }
+                    ref.invalidate(budgetsListProvider);
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
