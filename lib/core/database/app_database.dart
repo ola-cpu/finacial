@@ -16,10 +16,6 @@ class Expenses extends Table {
   DateTimeColumn get createdAt => dateTime()();
   IntColumn get syncStatus => integer().withDefault(const Constant(0))(); // 0: synced, 1: pending_insert, 2: pending_update, 3: pending_delete
 
-  @override
-  List<Set<Column>> get uniqueKeys => [
-        {remoteId}
-      ];
 }
 
 @DataClassName('Income')
@@ -32,10 +28,6 @@ class Incomes extends Table {
   DateTimeColumn get createdAt => dateTime()();
   IntColumn get syncStatus => integer().withDefault(const Constant(0))();
 
-  @override
-  List<Set<Column>> get uniqueKeys => [
-        {remoteId}
-      ];
 }
 
 @DataClassName('Budget')
@@ -46,10 +38,6 @@ class Budgets extends Table {
   RealColumn get monthlyLimit => real()();
   IntColumn get syncStatus => integer().withDefault(const Constant(0))();
 
-  @override
-  List<Set<Column>> get uniqueKeys => [
-        {remoteId}
-      ];
 }
 
 @DataClassName('Goal')
@@ -61,10 +49,6 @@ class Goals extends Table {
   DateTimeColumn get deadline => dateTime()();
   IntColumn get syncStatus => integer().withDefault(const Constant(0))();
 
-  @override
-  List<Set<Column>> get uniqueKeys => [
-        {remoteId}
-      ];
 }
 
 @DriftDatabase(tables: [Expenses, Incomes, Budgets, Goals])
