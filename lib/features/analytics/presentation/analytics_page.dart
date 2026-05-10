@@ -89,6 +89,16 @@ class AnalyticsPage extends ConsumerWidget {
               error: (e, s) => Text('Erreur: $e'),
             ),
           ),
+          const SizedBox(height: 16),
+          _buildSection(
+            title: 'Principes de Babylone',
+            content: Column(
+              children: ref.watch(babylonPrinciplesProvider).map((p) => ListTile(
+                leading: const Icon(Icons.menu_book, color: Color(0xFFD4AF37)),
+                title: Text(p, style: const TextStyle(fontStyle: FontStyle.italic)),
+              )).toList(),
+            ),
+          ),
         ],
       ),
     );

@@ -2,21 +2,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/database/app_database.dart';
+import '../../babylon/data/vault_service.dart';
 
 class IncomeService {
   final AppDatabase database;
+  final VaultService? vaultService;
 
-  IncomeService(this.database);
+  IncomeService(this.database, [this.vaultService]);
 
   Future<void> addIncome({
     required String title,
     required double amount,
     required String category,
+    int? userId,
   }) async {
     final now = DateTime.now();
 
     await database.into(database.incomes).insert(
           IncomesCompanion.insert(
+            userId: Value(userId),
             title: title,
             amount: amount,
             category: category,
@@ -24,6 +28,10 @@ class IncomeService {
             syncStatus: const Value(0),
           ),
         );
+
+    if (vaultService != null && userId != null) {
+      await vaultService!.distributeIncome(userId, amount);
+    }
   }
 
   Future<void> updateIncome({
@@ -62,5 +70,6 @@ class IncomeService {
 
 final incomeServiceProvider = Provider((ref) {
   final database = ref.watch(databaseProvider);
-  return IncomeService(database);
+  final vaultService = ref.watch(vaultServiceProvider);
+  return IncomeService(database, vaultService);
 });

@@ -8,6 +8,8 @@ import '../features/goals/presentation/goals_page.dart';
 import '../features/budgets/presentation/budgets_page.dart';
 import '../features/analytics/presentation/analytics_page.dart';
 import '../features/notifications/presentation/notifications_page.dart';
+import '../features/babylon/presentation/vaults_page.dart';
+import '../features/babylon/presentation/challenges_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/dashboard',
@@ -43,6 +45,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationsPage(),
+    ),
+    GoRoute(
+      path: '/vaults',
+      builder: (context, state) => const VaultsPage(),
+    ),
+    GoRoute(
+      path: '/challenges',
+      builder: (context, state) => const ChallengesPage(),
     ),
   ],
 );

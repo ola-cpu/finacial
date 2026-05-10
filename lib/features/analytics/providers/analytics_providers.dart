@@ -3,12 +3,14 @@ import '../data/analytics_service.dart';
 import '../../expenses/data/expense_service.dart';
 import '../../incomes/data/income_service.dart';
 import '../../budgets/data/budget_service.dart';
+import '../../goals/data/goal_service.dart';
 
 final analyticsServiceProvider = Provider((ref) {
   final expenseService = ref.watch(expenseServiceProvider);
   final incomeService = ref.watch(incomeServiceProvider);
   final budgetService = ref.watch(budgetServiceProvider);
-  return AnalyticsService(expenseService, incomeService, budgetService);
+  final goalService = ref.watch(goalServiceProvider);
+  return AnalyticsService(expenseService, incomeService, budgetService, goalService);
 });
 
 final spendingHabitsProvider = FutureProvider((ref) {
@@ -29,4 +31,8 @@ final suggestedBudgetsProvider = FutureProvider((ref) {
 
 final futureBalanceProvider = FutureProvider((ref) {
   return ref.watch(analyticsServiceProvider).predictFutureBalance();
+});
+
+final babylonPrinciplesProvider = Provider((ref) {
+  return ref.watch(analyticsServiceProvider).getBabylonPrinciples();
 });

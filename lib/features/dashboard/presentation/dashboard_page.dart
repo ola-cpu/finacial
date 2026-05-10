@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/dashboard_providers.dart';
+import '../../babylon/presentation/babylon_status_card.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -26,6 +27,16 @@ class DashboardPage extends ConsumerWidget {
             onPressed: () => context.push('/goals'),
           ),
           IconButton(
+            icon: const Icon(Icons.savings_outlined),
+            tooltip: 'Coffres',
+            onPressed: () => context.push('/vaults'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.emoji_events_outlined),
+            tooltip: 'Défis',
+            onPressed: () => context.push('/challenges'),
+          ),
+          IconButton(
             icon: const Icon(Icons.account_balance_wallet),
             onPressed: () => context.push('/budgets'),
           ),
@@ -43,6 +54,8 @@ class DashboardPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            const BabylonStatusCard(),
+            const SizedBox(height: 16),
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
