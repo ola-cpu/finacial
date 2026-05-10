@@ -11,9 +11,11 @@ class BudgetService {
   Future<void> addBudget({
     required String category,
     required double monthlyLimit,
+    int? userId,
   }) async {
     await database.into(database.budgets).insert(
           BudgetsCompanion.insert(
+            userId: Value(userId),
             category: category,
             monthlyLimit: monthlyLimit,
             syncStatus: const Value(0),
@@ -33,8 +35,12 @@ class BudgetService {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getBudgets() async {
-    final budgets = await database.select(database.budgets).get();
+  Future<List<Map<String, dynamic>>> getBudgets({int? userId}) async {
+    final query = database.select(database.budgets);
+    if (userId != null) {
+      query.where((t) => t.userId.equals(userId));
+    }
+    final budgets = await query.get();
 
     return budgets.map((e) => {
       'id': e.id,

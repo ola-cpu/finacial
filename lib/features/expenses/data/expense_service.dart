@@ -56,6 +56,8 @@ class ExpenseService {
     required String category,
     String? tags,
   }) async {
+    final expense = await (database.select(database.expenses)..where((t) => t.id.equals(id))).getSingle();
+
     await (database.update(database.expenses)..where((t) => t.id.equals(id))).write(
       ExpensesCompanion(
         title: Value(title),
@@ -65,10 +67,19 @@ class ExpenseService {
         syncStatus: const Value(0),
       ),
     );
+
+    if (container != null && expense.userId != null) {
+      await container!.read(automationServiceProvider).handleTransactionChanged(expense.userId!);
+    }
   }
 
   Future<void> deleteExpense(int id) async {
+    final expense = await (database.select(database.expenses)..where((t) => t.id.equals(id))).getSingle();
     await (database.delete(database.expenses)..where((t) => t.id.equals(id))).go();
+
+    if (container != null && expense.userId != null) {
+      await container!.read(automationServiceProvider).handleTransactionChanged(expense.userId!);
+    }
   }
 
   Future<List<Map<String, dynamic>>> getExpenses({

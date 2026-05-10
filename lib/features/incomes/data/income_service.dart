@@ -44,6 +44,8 @@ class IncomeService {
     required double amount,
     required String category,
   }) async {
+    final income = await (database.select(database.incomes)..where((t) => t.id.equals(id))).getSingle();
+
     await (database.update(database.incomes)..where((t) => t.id.equals(id))).write(
       IncomesCompanion(
         title: Value(title),
@@ -52,10 +54,19 @@ class IncomeService {
         syncStatus: const Value(0),
       ),
     );
+
+    if (container != null && income.userId != null) {
+      await container!.read(automationServiceProvider).handleTransactionChanged(income.userId!);
+    }
   }
 
   Future<void> deleteIncome(int id) async {
+    final income = await (database.select(database.incomes)..where((t) => t.id.equals(id))).getSingle();
     await (database.delete(database.incomes)..where((t) => t.id.equals(id))).go();
+
+    if (container != null && income.userId != null) {
+      await container!.read(automationServiceProvider).handleTransactionChanged(income.userId!);
+    }
   }
 
   Future<List<Map<String, dynamic>>> getIncomes() async {

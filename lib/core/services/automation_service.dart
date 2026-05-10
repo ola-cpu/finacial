@@ -68,13 +68,74 @@ class AutomationService {
       body: 'Votre revenu de $amount FCFA a été automatiquement réparti dans vos coffres.',
       type: 'info',
     );
+
+    // 6. Update general state
+    await handleTransactionChanged(userId);
+  }
+
+  Future<void> handleTransactionChanged(int userId) async {
+    // 1. Update financial score
+    await babylonService.updateFinancialScore(userId);
+
+    // 2. Track all goals
+    final goals = await goalService.getGoals(userId: userId);
+    for (var goal in goals) {
+      await goalService.trackPerformance(goal['id']);
+    }
+
+    // 3. Update challenge progress
+    await _updateChallengeProgress(userId);
+  }
+
+  Future<void> _updateChallengeProgress(int userId) async {
+    final activeUserChallengesQuery = database.select(database.userChallenges)
+      ..where((t) => t.userId.equals(userId) & t.status.equals('active'));
+    final userChallengesList = await activeUserChallengesQuery.get();
+
+    if (userChallengesList.isEmpty) return;
+
+    // Calculate current net savings
+    final incomesQuery = database.select(database.incomes)..where((t) => t.userId.equals(userId));
+    final expensesQuery = database.select(database.expenses)..where((t) => t.userId.equals(userId));
+
+    final incomes = await incomesQuery.get();
+    final expenses = await expensesQuery.get();
+
+    final totalIncome = incomes.fold(0.0, (sum, i) => sum + i.amount);
+    final totalExpense = expenses.fold(0.0, (sum, e) => sum + e.amount);
+    final netSavings = totalIncome - totalExpense;
+
+    for (var userChallenge in userChallengesList) {
+      final challengeQuery = database.select(database.challenges)..where((t) => t.id.equals(userChallenge.challengeId));
+      final challenge = await challengeQuery.getSingle();
+
+      if (challenge.type == 'saving') {
+        final progress = (netSavings / challenge.targetValue).clamp(0.0, 1.0);
+
+        await (database.update(database.userChallenges)..where((t) => t.id.equals(userChallenge.id))).write(
+          UserChallengesCompanion(
+            progress: Value(progress),
+            status: Value(progress >= 1.0 ? 'completed' : 'active'),
+          ),
+        );
+
+        if (progress >= 1.0) {
+          await babylonService.addPoints(userId, challenge.rewardPoints);
+          await notificationService.sendCongratulation(
+            userId: userId,
+            title: 'Défi Relevé !',
+            body: 'Vous avez terminé le défi : ${challenge.title} et gagné ${challenge.rewardPoints} points !',
+          );
+        }
+      }
+    }
   }
 
   Future<void> handleExpenseAdded(int? userId, String category, double amount) async {
     if (userId == null) return;
 
     // 1. Check budget
-    final budgets = await budgetService.getBudgets();
+    final budgets = await budgetService.getBudgets(userId: userId);
     final categoryBudget = budgets.firstWhere(
       (b) => b['category'] == category,
       orElse: () => {},
@@ -108,8 +169,8 @@ class AutomationService {
       }
     }
 
-    // 2. Update financial score
-    await babylonService.updateFinancialScore(userId);
+    // 2. Update general state
+    await handleTransactionChanged(userId);
 
     // 3. Detect anomalies
     final anomalies = await analyticsService.detectFinancialAnomalies();
