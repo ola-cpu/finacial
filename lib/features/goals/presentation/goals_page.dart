@@ -4,6 +4,7 @@ import '../../../core/widgets/app_button.dart';
 import '../data/goal_service.dart';
 import '../providers/goals_providers.dart';
 import 'package:intl/intl.dart';
+import '../../auth/data/auth_service.dart';
 
 class GoalsPage extends ConsumerWidget {
   const GoalsPage({super.key});
@@ -11,6 +12,7 @@ class GoalsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goalsAsync = ref.watch(goalsListProvider);
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Objectifs Financiers')),
@@ -20,22 +22,75 @@ class GoalsPage extends ConsumerWidget {
           itemBuilder: (context, index) {
             final goal = goals[index];
             final deadline = DateTime.parse(goal['deadline']);
-            return ListTile(
-              title: Text(goal['title']),
-              subtitle: Text('Cible: ${goal['target_amount']} FCFA - Date: ${DateFormat('dd/MM/yyyy').format(deadline)}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () => _showGoalDialog(context, ref, goal: goal),
+            double target = (goal['target_amount'] as num).toDouble();
+            double current = (goal['current_amount'] as num).toDouble();
+            double percent = (current / target).clamp(0, 1);
+
+            return FutureBuilder<Map<String, dynamic>>(
+              future: ref.read(goalServiceProvider).estimateTimeRemaining(goal['id'], user?.id),
+              builder: (context, snapshot) {
+                String timeRemaining = snapshot.hasData
+                    ? (snapshot.data!['months'] == 999
+                        ? snapshot.data!['status']
+                        : '${snapshot.data!['months']} mois restants')
+                    : 'Calcul...';
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(goal['title'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+                                  onPressed: () => _showGoalDialog(context, ref, goal: goal),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                  onPressed: () => _deleteGoal(context, ref, goal['id']),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: percent,
+                          backgroundColor: Colors.grey[800],
+                          color: const Color(0xFF50C878),
+                          minHeight: 10,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('${current.toStringAsFixed(0)} / ${target.toStringAsFixed(0)} FCFA'),
+                            Text('${(percent * 100).toStringAsFixed(0)}%'),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Échéance: ${DateFormat('dd/MM/yyyy').format(deadline)}',
+                                style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                            Text(timeRemaining,
+                                style: const TextStyle(color: Color(0xFF50C878), fontSize: 12, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _deleteGoal(context, ref, goal['id']),
-                  ),
-                ],
-              ),
+                );
+              },
             );
           },
         ),
@@ -53,7 +108,9 @@ class GoalsPage extends ConsumerWidget {
   Future<void> _showGoalDialog(BuildContext context, WidgetRef ref, {Map<String, dynamic>? goal}) async {
     final titleController = TextEditingController(text: goal?['title'] ?? '');
     final amountController = TextEditingController(text: goal?['target_amount']?.toString() ?? '');
+    final currentController = TextEditingController(text: goal?['current_amount']?.toString() ?? '0');
     DateTime selectedDate = goal != null ? DateTime.parse(goal['deadline']) : DateTime.now().add(const Duration(days: 30));
+    final user = ref.read(currentUserProvider);
 
     return showDialog(
       context: context,
@@ -70,6 +127,11 @@ class GoalsPage extends ConsumerWidget {
               TextField(
                 controller: amountController,
                 decoration: const InputDecoration(labelText: 'Montant Cible'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: currentController,
+                decoration: const InputDecoration(labelText: 'Montant Actuel'),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 10),
@@ -113,6 +175,7 @@ class GoalsPage extends ConsumerWidget {
                     onPressed: () async {
                       final service = ref.read(goalServiceProvider);
                       final amount = double.tryParse(amountController.text);
+                      final current = double.tryParse(currentController.text) ?? 0;
                       if (amount == null) {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide')));
@@ -120,6 +183,7 @@ class GoalsPage extends ConsumerWidget {
                       }
                       if (goal == null) {
                         await service.addGoal(
+                          userId: user?.id,
                           title: titleController.text,
                           targetAmount: amount,
                           deadline: selectedDate,
@@ -129,6 +193,7 @@ class GoalsPage extends ConsumerWidget {
                           id: goal['id'],
                           title: titleController.text,
                           targetAmount: amount,
+                          currentAmount: current,
                           deadline: selectedDate,
                         );
                       }

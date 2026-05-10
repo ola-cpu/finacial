@@ -18,6 +18,10 @@ class DashboardPage extends ConsumerWidget {
         title: const Text('Dashboard'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () => context.push('/notifications'),
+          ),
+          IconButton(
             icon: const Icon(Icons.flag),
             onPressed: () => context.push('/goals'),
           ),

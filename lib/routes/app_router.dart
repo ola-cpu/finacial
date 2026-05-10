@@ -7,6 +7,7 @@ import '../features/statistics/presentation/statistics_page.dart';
 import '../features/goals/presentation/goals_page.dart';
 import '../features/budgets/presentation/budgets_page.dart';
 import '../features/analytics/presentation/analytics_page.dart';
+import '../features/notifications/presentation/notifications_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/dashboard',
@@ -38,6 +39,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/budgets',
       builder: (context, state) => const BudgetsPage(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsPage(),
     ),
   ],
 );
