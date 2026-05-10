@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/wasm.dart';
+import 'package:flutter/foundation.dart';
 
 QueryExecutor openConnection() {
   return DatabaseConnection.delayed(Future(() async {
@@ -10,7 +11,7 @@ QueryExecutor openConnection() {
     );
 
     if (result.missingFeatures.isNotEmpty) {
-      print('Using ${result.chosenImplementation} due to missing browser '
+      debugPrint('Using ${result.chosenImplementation} due to missing browser '
           'features: ${result.missingFeatures}');
     }
 

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/app_database.dart';
 import '../providers/database_provider.dart';
@@ -25,7 +26,7 @@ class NotificationService {
         );
 
     // In a real app, integrate with flutter_local_notifications here
-    print('NOTIFICATION: $title - $body');
+    debugPrint('NOTIFICATION: $title - $body');
   }
 
   Future<List<Notification>> getNotifications(int? userId) async {
