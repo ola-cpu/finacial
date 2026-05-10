@@ -5,6 +5,7 @@ import '../../../core/widgets/app_button.dart';
 import '../data/expense_service.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../statistics/providers/statistics_providers.dart';
+import '../../auth/data/auth_service.dart';
 
 class AddExpensePage extends ConsumerStatefulWidget {
   final Map<String, dynamic>? expense;
@@ -121,10 +122,12 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
                               category: _category,
                             );
                       } else {
+                        final user = ref.read(currentUserProvider);
                         await ref.read(expenseServiceProvider).addExpense(
                               title: _titleController.text,
                               amount: double.parse(_amountController.text),
                               category: _category,
+                              userId: user?.id,
                             );
                       }
                       ref.invalidate(dashboardExpensesProvider);

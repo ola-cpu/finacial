@@ -122,15 +122,14 @@ class GoalService {
     // In this simplified logic, we assume a portion of net savings is allocated to the goal.
     // For a more advanced system, we'd use the Vaults/Contributions.
     final netSavings = totalIncome - totalExpense;
-    if (netSavings <= 0) return;
 
     // Let's assume the user allocates their savingPercentage of net savings to this goal (simplified)
     final user = await (database.select(database.users)..where((t) => t.id.equals(goal.userId!))).getSingle();
-    final allocatedAmount = netSavings * (user.savingPercentage / 100);
+    final allocatedAmount = (netSavings * (user.savingPercentage / 100)).clamp(0.0, goal.targetAmount);
 
     await (database.update(database.goals)..where((t) => t.id.equals(goalId))).write(
       GoalsCompanion(
-        currentAmount: Value(allocatedAmount.clamp(0, goal.targetAmount)),
+        currentAmount: Value(allocatedAmount),
       ),
     );
   }

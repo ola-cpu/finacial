@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/app_button.dart';
 import '../data/budget_service.dart';
 import '../providers/budgets_providers.dart';
+import '../../auth/data/auth_service.dart';
 
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
@@ -88,6 +89,7 @@ class BudgetsPage extends ConsumerWidget {
                   text: 'Enregistrer',
                   onPressed: () async {
                     final service = ref.read(budgetServiceProvider);
+                    final user = ref.read(currentUserProvider);
                     final limit = double.tryParse(limitController.text);
                     if (limit == null) {
                       ScaffoldMessenger.of(context)
@@ -96,6 +98,7 @@ class BudgetsPage extends ConsumerWidget {
                     }
                     if (budget == null) {
                       await service.addBudget(
+                        userId: user?.id,
                         category: categoryController.text,
                         monthlyLimit: limit,
                       );

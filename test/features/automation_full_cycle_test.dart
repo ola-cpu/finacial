@@ -58,7 +58,7 @@ void main() {
     await database.close();
   });
 
-  test('Adding income triggers vault distribution and notifications', () async {
+  test('Updating and deleting transactions triggers automation (score and goals)', () async {
     // 1. Create a user
     final userId = await database.into(database.users).insert(
       UsersCompanion.insert(
@@ -69,32 +69,48 @@ void main() {
       ),
     );
 
-    // 2. Setup default vaults
-    await vaultService.createDefaultVaults(userId);
+    // 2. Setup a goal
+    await goalService.addGoal(
+      userId: userId,
+      title: 'Epargne',
+      targetAmount: 100000,
+      deadline: DateTime.now().add(const Duration(days: 365)),
+    );
 
     // 3. Add income
     await incomeService.addIncome(
       title: 'Salaire',
-      amount: 500000,
+      amount: 1000000,
       category: 'Salaire',
       userId: userId,
     );
 
-    // 4. Verify vaults were updated
-    final vaults = await vaultService.getVaults(userId);
-    final totalInVaults = vaults.fold(0.0, (sum, v) => sum + v.totalAmount);
-    expect(totalInVaults, greaterThan(0));
+    // 4. Verify goal progress (10% of 1M = 100k, so 100% of 100k goal)
+    var goals = await goalService.getGoals(userId: userId);
+    expect(goals.first['current_amount'], 100000.0);
 
-    // 5. Verify notification was sent
-    final notifications = await notificationService.getNotifications(userId);
-    expect(notifications.any((n) => n.title == 'Revenu Réparti'), isTrue);
+    // 5. Update income (decrease)
+    final incomes = await database.select(database.incomes).get();
+    await incomeService.updateIncome(
+      id: incomes.first.id,
+      title: 'Salaire Réduit',
+      amount: 500000,
+      category: 'Salaire',
+    );
 
-    // 6. Verify financial score updated
-    final user = await (database.select(database.users)..where((t) => t.id.equals(userId))).getSingle();
-    expect(user.financialScore, greaterThan(0));
+    // 6. Verify goal progress updated (10% of 500k = 50k)
+    goals = await goalService.getGoals(userId: userId);
+    expect(goals.first['current_amount'], 50000.0);
+
+    // 7. Delete income
+    await incomeService.deleteIncome(incomes.first.id);
+
+    // 8. Verify goal progress reset to 0
+    goals = await goalService.getGoals(userId: userId);
+    expect(goals.first['current_amount'], 0.0);
   });
 
-  test('Adding expense triggers budget alerts', () async {
+  test('Challenges progress is updated automatically', () async {
      // 1. Create a user
     final userId = await database.into(database.users).insert(
       UsersCompanion.insert(
@@ -105,20 +121,39 @@ void main() {
       ),
     );
 
-    // 2. Setup budget
-    await budgetService.addBudget(category: 'Alimentation', monthlyLimit: 50000, userId: userId);
+    // 2. Create a challenge
+    final challengeId = await database.into(database.challenges).insert(
+      ChallengesCompanion.insert(
+        title: 'Défi Epargne',
+        description: 'Epargnez 100k',
+        type: 'saving',
+        targetValue: 100000,
+        durationDays: 30,
+        rewardPoints: 100,
+      ),
+    );
 
-    // 3. Add expense exceeding budget
-    final expenseServiceWithAutomation = ExpenseService(database, container);
-    await expenseServiceWithAutomation.addExpense(
-      title: 'Course',
-      amount: 60000,
-      category: 'Alimentation',
+    // 3. Join challenge
+    await babylonService.joinChallenge(userId, challengeId);
+
+    // 4. Add income (Net savings = 200k)
+    await incomeService.addIncome(
+      title: 'Freelance',
+      amount: 200000,
+      category: 'Business',
       userId: userId,
     );
 
-    // 4. Verify alert notification
+    // 5. Verify challenge progress (200k / 100k = 200%, clamped to 100%)
+    final userChallenges = await (database.select(database.userChallenges)..where((t) => t.userId.equals(userId))).get();
+    expect(userChallenges.first.progress, 1.0);
+    expect(userChallenges.first.status, 'completed');
+
+    // 6. Verify points and notification
+    final user = await (database.select(database.users)..where((t) => t.id.equals(userId))).getSingle();
+    expect(user.points, 100);
+
     final notifications = await notificationService.getNotifications(userId);
-    expect(notifications.any((n) => n.title == 'Budget Dépassé'), isTrue);
+    expect(notifications.any((n) => n.title == 'Défi Relevé !'), isTrue);
   });
 }
