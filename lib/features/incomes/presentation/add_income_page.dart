@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/income_service.dart';
+import '../../dashboard/providers/dashboard_providers.dart';
+import '../../statistics/providers/statistics_providers.dart';
 
 class AddIncomePage extends ConsumerStatefulWidget {
   final Map<String, dynamic>? income;
@@ -55,6 +57,8 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                 setState(() => _isLoading = true);
                 try {
                   await ref.read(incomeServiceProvider).deleteIncome(widget.income!['id']);
+                  ref.invalidate(dashboardIncomesProvider);
+                  ref.invalidate(monthlyTrendsProvider);
                   if (mounted) context.pop();
                 } catch (e) {
                   _handleError(e);
@@ -117,6 +121,8 @@ class _AddIncomePageState extends ConsumerState<AddIncomePage> {
                               category: _category,
                             );
                       }
+                      ref.invalidate(dashboardIncomesProvider);
+                      ref.invalidate(monthlyTrendsProvider);
                       if (mounted) context.pop();
                     } catch (e) {
                       _handleError(e);

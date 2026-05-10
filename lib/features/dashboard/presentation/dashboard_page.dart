@@ -22,6 +22,10 @@ class DashboardPage extends ConsumerWidget {
             onPressed: () => context.push('/goals'),
           ),
           IconButton(
+            icon: const Icon(Icons.account_balance_wallet),
+            onPressed: () => context.push('/budgets'),
+          ),
+          IconButton(
             icon: const Icon(Icons.bar_chart),
             onPressed: () => context.push('/statistics'),
           ),

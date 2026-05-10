@@ -50,6 +50,10 @@ class GoalService {
       'deadline': e.deadline.toIso8601String(),
     }).toList();
   }
+
+  Future<void> deleteGoal(int id) async {
+    await (database.delete(database.goals)..where((t) => t.id.equals(id))).go();
+  }
 }
 
 final goalServiceProvider = Provider((ref) {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/expense_service.dart';
+import '../../dashboard/providers/dashboard_providers.dart';
+import '../../statistics/providers/statistics_providers.dart';
 
 class AddExpensePage extends ConsumerStatefulWidget {
   final Map<String, dynamic>? expense;
@@ -55,6 +57,9 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
                 setState(() => _isLoading = true);
                 try {
                   await ref.read(expenseServiceProvider).deleteExpense(widget.expense!['id']);
+                  ref.invalidate(dashboardExpensesProvider);
+                  ref.invalidate(categoryExpensesProvider);
+                  ref.invalidate(monthlyTrendsProvider);
                   if (mounted) context.pop();
                 } catch (e) {
                   _handleError(e);
@@ -117,6 +122,9 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
                               category: _category,
                             );
                       }
+                      ref.invalidate(dashboardExpensesProvider);
+                      ref.invalidate(categoryExpensesProvider);
+                      ref.invalidate(monthlyTrendsProvider);
                       if (mounted) context.pop();
                     } catch (e) {
                       _handleError(e);
