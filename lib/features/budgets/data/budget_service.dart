@@ -43,6 +43,10 @@ class BudgetService {
       'monthly_limit': e.monthlyLimit,
     }).toList();
   }
+
+  Future<void> deleteBudget(int id) async {
+    await (database.delete(database.budgets)..where((t) => t.id.equals(id))).go();
+  }
 }
 
 final budgetServiceProvider = Provider((ref) {
