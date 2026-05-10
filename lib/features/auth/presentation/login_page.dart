@@ -45,6 +45,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           final authException = authState.error as AuthException;
           if (authException.statusCode == '429') {
             message = 'Trop de tentatives. Veuillez patienter un instant et réessayer.';
+          } else if (authException.statusCode == '422') {
+            message = 'Le mot de passe est trop court ou trop simple.';
+          } else if (authException.statusCode == '400') {
+            if (authException.message.toLowerCase().contains('invalid')) {
+              message = "Cette adresse e-mail est invalide ou n'est pas acceptée.";
+            } else {
+              message = "Une erreur est survenue lors de la validation des données.";
+            }
           } else {
             message = authException.message;
           }
