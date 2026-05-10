@@ -2,11 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/services/automation_service.dart';
 
 class ExpenseService {
   final AppDatabase database;
+  final ProviderContainer? container;
 
-  ExpenseService(this.database);
+  ExpenseService(this.database, [this.container]);
 
   Future<void> addExpense({
     required String title,
@@ -41,6 +43,10 @@ class ExpenseService {
             syncStatus: const Value(0),
           ),
         );
+
+    if (container != null && userId != null) {
+      await container!.read(automationServiceProvider).handleExpenseAdded(userId, finalCategory, amount);
+    }
   }
 
   Future<void> updateExpense({
@@ -104,5 +110,5 @@ class ExpenseService {
 
 final expenseServiceProvider = Provider((ref) {
   final database = ref.watch(databaseProvider);
-  return ExpenseService(database);
+  return ExpenseService(database, ref.container);
 });

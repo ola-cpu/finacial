@@ -29,6 +29,45 @@ class NotificationService {
     debugPrint('NOTIFICATION: $title - $body');
   }
 
+  Future<void> sendAlert({
+    required int? userId,
+    required String title,
+    required String body,
+  }) async {
+    await sendNotification(
+      userId: userId,
+      title: title,
+      body: body,
+      type: 'alert',
+    );
+  }
+
+  Future<void> sendCongratulation({
+    required int? userId,
+    required String title,
+    required String body,
+  }) async {
+    await sendNotification(
+      userId: userId,
+      title: title,
+      body: body,
+      type: 'congratulation',
+    );
+  }
+
+  Future<void> sendTip({
+    required int? userId,
+    required String title,
+    required String body,
+  }) async {
+    await sendNotification(
+      userId: userId,
+      title: title,
+      body: body,
+      type: 'tip',
+    );
+  }
+
   Future<List<Notification>> getNotifications(int? userId) async {
     final select = database.select(database.notifications);
     if (userId != null) {

@@ -3,12 +3,14 @@ import 'package:drift/drift.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/database/app_database.dart';
 import '../../babylon/data/vault_service.dart';
+import '../../../core/services/automation_service.dart';
 
 class IncomeService {
   final AppDatabase database;
   final VaultService? vaultService;
+  final ProviderContainer? container;
 
-  IncomeService(this.database, [this.vaultService]);
+  IncomeService(this.database, [this.vaultService, this.container]);
 
   Future<void> addIncome({
     required String title,
@@ -29,7 +31,9 @@ class IncomeService {
           ),
         );
 
-    if (vaultService != null && userId != null) {
+    if (container != null && userId != null) {
+      await container!.read(automationServiceProvider).handleIncomeAdded(userId, amount);
+    } else if (vaultService != null && userId != null) {
       await vaultService!.distributeIncome(userId, amount);
     }
   }
@@ -71,5 +75,5 @@ class IncomeService {
 final incomeServiceProvider = Provider((ref) {
   final database = ref.watch(databaseProvider);
   final vaultService = ref.watch(vaultServiceProvider);
-  return IncomeService(database, vaultService);
+  return IncomeService(database, vaultService, ref.container);
 });
