@@ -112,13 +112,63 @@ class UserChallenges extends Table {
   DateTimeColumn get endDate => dateTime().nullable()();
 }
 
-@DriftDatabase(tables: [Expenses, Incomes, Budgets, Goals, Users, Contributions, Notifications, Challenges, UserChallenges])
+@DataClassName('Advice')
+class Advices extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer().nullable().references(Users, #id)();
+  TextColumn get title => text()();
+  TextColumn get content => text()();
+  TextColumn get type => text()(); // investment, saving, debt, etc.
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+@DataClassName('Badge')
+class Badges extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get description => text()();
+  TextColumn get icon => text()();
+  IntColumn get pointsRequired => integer()();
+}
+
+@DataClassName('UserBadge')
+class UserBadges extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer().references(Users, #id)();
+  IntColumn get badgeId => integer().references(Badges, #id)();
+  DateTimeColumn get unlockedAt => dateTime()();
+}
+
+@DataClassName('FinancialScoreHistory')
+class FinancialScoreHistories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer().references(Users, #id)();
+  RealColumn get score => real()();
+  DateTimeColumn get recordedAt => dateTime()();
+}
+
+@DriftDatabase(tables: [
+  Expenses,
+  Incomes,
+  Budgets,
+  Goals,
+  Users,
+  Contributions,
+  Notifications,
+  Challenges,
+  UserChallenges,
+  Advices,
+  Badges,
+  UserBadges,
+  FinancialScoreHistories,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
   AppDatabase.forTesting(DatabaseConnection connection) : super(connection);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -148,6 +198,12 @@ class AppDatabase extends _$AppDatabase {
 
             await m.createTable(challenges);
             await m.createTable(userChallenges);
+          }
+          if (from < 4) {
+            await m.createTable(advices);
+            await m.createTable(badges);
+            await m.createTable(userBadges);
+            await m.createTable(financialScoreHistories);
           }
         },
         beforeOpen: (details) async {

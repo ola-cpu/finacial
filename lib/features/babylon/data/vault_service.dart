@@ -52,12 +52,63 @@ class VaultService {
     }
   }
 
+  /// CREATE: Creates a new vault (contribution) for a user.
+  Future<void> createVault({
+    required int userId,
+    required String title,
+    required double percentage,
+    required String type,
+    double targetAmount = 1000000,
+  }) async {
+    if (percentage < 0 || percentage > 100) {
+      throw ArgumentError('Le pourcentage doit être compris entre 0 et 100');
+    }
+
+    await database.into(database.contributions).insert(
+          ContributionsCompanion.insert(
+            userId: Value(userId),
+            title: title,
+            percentage: percentage,
+            type: Value(type),
+            targetAmount: Value(targetAmount),
+          ),
+        );
+  }
+
+  /// READ: Already implemented in getVaults
+
+  /// UPDATE: Modifies the percentage of a vault with validation.
   Future<void> updateVaultPercentage(int vaultId, double newPercentage) async {
+    if (newPercentage < 0 || newPercentage > 100) {
+      throw ArgumentError('Le pourcentage doit être compris entre 0 et 100');
+    }
+
     await (database.update(database.contributions)..where((t) => t.id.equals(vaultId))).write(
       ContributionsCompanion(
         percentage: Value(newPercentage),
       ),
     );
+  }
+
+  /// UPDATE: Modifies general vault information.
+  Future<void> updateVault({
+    required int vaultId,
+    String? title,
+    double? targetAmount,
+    String? type,
+  }) async {
+    await (database.update(database.contributions)..where((t) => t.id.equals(vaultId))).write(
+      ContributionsCompanion(
+        title: title != null ? Value(title) : const Value.absent(),
+        targetAmount: targetAmount != null ? Value(targetAmount) : const Value.absent(),
+        type: type != null ? Value(type) : const Value.absent(),
+      ),
+    );
+  }
+
+  /// DELETE: Removes a vault from the database.
+  Future<void> deleteVault(int vaultId) async {
+    await (database.delete(database.contributions)..where((t) => t.id.equals(vaultId))).go();
   }
 }
 

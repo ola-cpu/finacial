@@ -105,6 +105,35 @@ class GoalService {
       'status': 'En cours',
     };
   }
+
+  /// UPDATE: Automatically tracks and updates the performance (currentAmount) of a goal.
+  /// It sums all incomes and subtracts all expenses for the goal's user to estimate savings,
+  /// or could be more specific if goals were linked to categories.
+  Future<void> trackPerformance(int goalId) async {
+    final goal = await (database.select(database.goals)..where((t) => t.id.equals(goalId))).getSingle();
+    if (goal.userId == null) return;
+
+    final incomes = await (database.select(database.incomes)..where((t) => t.userId.equals(goal.userId!))).get();
+    final expenses = await (database.select(database.expenses)..where((t) => t.userId.equals(goal.userId!))).get();
+
+    double totalIncome = incomes.fold(0, (sum, item) => sum + item.amount);
+    double totalExpense = expenses.fold(0, (sum, item) => sum + item.amount);
+
+    // In this simplified logic, we assume a portion of net savings is allocated to the goal.
+    // For a more advanced system, we'd use the Vaults/Contributions.
+    final netSavings = totalIncome - totalExpense;
+    if (netSavings <= 0) return;
+
+    // Let's assume the user allocates their savingPercentage of net savings to this goal (simplified)
+    final user = await (database.select(database.users)..where((t) => t.id.equals(goal.userId!))).getSingle();
+    final allocatedAmount = netSavings * (user.savingPercentage / 100);
+
+    await (database.update(database.goals)..where((t) => t.id.equals(goalId))).write(
+      GoalsCompanion(
+        currentAmount: Value(allocatedAmount.clamp(0, goal.targetAmount)),
+      ),
+    );
+  }
 }
 
 final goalServiceProvider = Provider((ref) {

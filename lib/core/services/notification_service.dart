@@ -37,10 +37,34 @@ class NotificationService {
     return (select..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).get();
   }
 
+  /// UPDATE: Marks a notification as read.
   Future<void> markAsRead(int id) async {
     await (database.update(database.notifications)..where((t) => t.id.equals(id))).write(
       const NotificationsCompanion(isRead: Value(true)),
     );
+  }
+
+  /// UPDATE: Modifies an existing notification's content or type.
+  Future<void> updateNotification({
+    required int id,
+    String? title,
+    String? body,
+    String? type,
+    bool? isRead,
+  }) async {
+    await (database.update(database.notifications)..where((t) => t.id.equals(id))).write(
+      NotificationsCompanion(
+        title: title != null ? Value(title) : const Value.absent(),
+        body: body != null ? Value(body) : const Value.absent(),
+        type: type != null ? Value(type) : const Value.absent(),
+        isRead: isRead != null ? Value(isRead) : const Value.absent(),
+      ),
+    );
+  }
+
+  /// DELETE: Removes a notification from the database.
+  Future<void> deleteNotification(int id) async {
+    await (database.delete(database.notifications)..where((t) => t.id.equals(id))).go();
   }
 }
 
