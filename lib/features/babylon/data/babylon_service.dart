@@ -39,12 +39,21 @@ class BabylonService {
     else if (score >= 50) level = 'Investisseur';
     else if (score >= 30) level = 'Économe';
 
+    final previousLevel = user.level;
+
     await (database.update(database.users)..where((t) => t.id.equals(userId))).write(
       UsersCompanion(
         financialScore: Value(score),
         level: Value(level),
       ),
     );
+
+    if (previousLevel != level) {
+      // Level up logic - could trigger a notification via an event or direct call
+      // For now, we'll just ensure the state is updated.
+    }
+
+    await _checkAndAwardBadges(userId, score);
 
     // Record history
     await database.into(database.financialScoreHistories).insert(
@@ -164,6 +173,26 @@ class BabylonService {
   /// READ: Retrieves all badges unlocked by a user.
   Future<List<UserBadge>> getUserBadges(int userId) async {
     return await (database.select(database.userBadges)..where((t) => t.userId.equals(userId))).get();
+  }
+
+  Future<void> _checkAndAwardBadges(int userId, double score) async {
+    final existingBadges = await getUserBadges(userId);
+    final badgeIds = existingBadges.map((b) => b.badgeId).toSet();
+
+    final allBadges = await database.select(database.badges).get();
+
+    for (var badge in allBadges) {
+      if (badgeIds.contains(badge.id)) continue;
+
+      bool shouldAward = false;
+      if (badge.name == 'Premier Pas' && score > 10) shouldAward = true;
+      if (badge.name == 'Économe Discipliné' && score > 50) shouldAward = true;
+      if (badge.name == 'Maître de Babylone' && score > 90) shouldAward = true;
+
+      if (shouldAward) {
+        await awardBadge(userId, badge.id);
+      }
+    }
   }
 }
 

@@ -1,22 +1,31 @@
-import '../../expenses/data/expense_service.dart';
-import '../../incomes/data/income_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/providers/database_provider.dart';
 import '../../budgets/data/budget_service.dart';
 import '../../goals/data/goal_service.dart';
+import 'package:drift/drift.dart';
 
 class AnalyticsService {
-  final ExpenseService _expenseService;
-  final IncomeService _incomeService;
+  final AppDatabase database;
   final BudgetService _budgetService;
   final GoalService? _goalService;
 
-  AnalyticsService(this._expenseService, this._incomeService, this._budgetService, [this._goalService]);
+  AnalyticsService(this.database, this._budgetService, [this._goalService]);
+
+  Future<List<Expense>> _getExpenses() async {
+    return await database.select(database.expenses).get();
+  }
+
+  Future<List<Income>> _getIncomes() async {
+    return await database.select(database.incomes).get();
+  }
 
   Future<Map<String, double>> analyzeSpendingHabits() async {
-    final expenses = await _expenseService.getExpenses();
+    final expenses = await _getExpenses();
     Map<String, double> categoryTotals = {};
     for (var expense in expenses) {
-      final category = expense['category'] as String;
-      final amount = (expense['amount'] as num).toDouble();
+      final category = expense.category;
+      final amount = expense.amount;
       categoryTotals[category] = (categoryTotals[category] ?? 0) + amount;
     }
     return categoryTotals;
@@ -42,14 +51,14 @@ class AnalyticsService {
   }
 
   Future<List<String>> detectExcessiveSpending() async {
-    final expenses = await _expenseService.getExpenses();
+    final expenses = await _getExpenses();
     final budgets = await _budgetService.getBudgets();
     List<String> alerts = [];
 
     Map<String, double> categorySpending = {};
     for (var expense in expenses) {
-      final category = expense['category'] as String;
-      final amount = (expense['amount'] as num).toDouble();
+      final category = expense.category;
+      final amount = expense.amount;
       categorySpending[category] = (categorySpending[category] ?? 0) + amount;
     }
 
@@ -91,11 +100,11 @@ class AnalyticsService {
   }
 
   Future<double> predictFutureBalance() async {
-    final incomes = await _incomeService.getIncomes();
-    final expenses = await _expenseService.getExpenses();
+    final incomes = await _getIncomes();
+    final expenses = await _getExpenses();
 
-    double totalIncome = incomes.fold(0, (sum, item) => sum + (item['amount'] as num).toDouble());
-    double totalExpense = expenses.fold(0, (sum, item) => sum + (item['amount'] as num).toDouble());
+    double totalIncome = incomes.fold(0.0, (sum, item) => sum + item.amount);
+    double totalExpense = expenses.fold(0.0, (sum, item) => sum + item.amount);
 
     double currentBalance = totalIncome - totalExpense;
 
@@ -103,6 +112,46 @@ class AnalyticsService {
     double monthlyIncomeRate = totalIncome;
 
     return currentBalance + (monthlyIncomeRate - monthlyBurnRate);
+  }
+
+  Future<List<String>> generateAutomatedAdvice() async {
+    final habits = await analyzeSpendingHabits();
+    final incomes = await _getIncomes();
+    final totalIncome = incomes.fold(0.0, (sum, i) => sum + i.amount);
+    List<String> advice = [];
+
+    if (totalIncome > 0) {
+      habits.forEach((category, amount) {
+        final percentage = (amount / totalIncome) * 100;
+        if (percentage > 30) {
+          advice.add("Votre catégorie $category représente ${percentage.toStringAsFixed(1)}% de vos revenus. L'Homme le plus riche de Babylone suggère de limiter les dépenses courantes pour maximiser l'épargne.");
+        }
+      });
+    }
+
+    if (habits.isEmpty) {
+      advice.add("Commencez à enregistrer vos dépenses pour recevoir des conseils personnalisés.");
+    }
+
+    return advice;
+  }
+
+  Future<List<String>> detectFinancialAnomalies() async {
+    final expenses = await _getExpenses();
+    if (expenses.length < 5) return [];
+
+    final totalAmount = expenses.fold(0.0, (sum, e) => sum + e.amount);
+    final average = totalAmount / expenses.length;
+
+    List<String> anomalies = [];
+    for (var expense in expenses) {
+      final amount = expense.amount;
+      if (amount > average * 3) {
+        anomalies.add("Dépense inhabituelle détectée : ${expense.title} ($amount FCFA) est nettement supérieure à votre moyenne.");
+      }
+    }
+
+    return anomalies;
   }
 
   List<String> getBabylonPrinciples() {
@@ -117,3 +166,10 @@ class AnalyticsService {
     ];
   }
 }
+
+final analyticsServiceProvider = Provider<AnalyticsService>((ref) {
+  final database = ref.watch(databaseProvider);
+  final budgetService = ref.watch(budgetServiceProvider);
+  final goalService = ref.watch(goalServiceProvider);
+  return AnalyticsService(database, budgetService, goalService);
+});
